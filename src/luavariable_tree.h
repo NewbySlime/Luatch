@@ -1,6 +1,7 @@
 #ifndef LUAVARIABLE_TREE_HEADER
 #define LUAVARIABLE_TREE_HEADER
 
+#include "custom_variant.h"
 #include "global_variables.h"
 #include "popup_context_menu.h"
 #include "popup_variable_setter.h"
@@ -105,13 +106,15 @@ class LuaVariableTree: public godot::Tree{
     void _delete_reference_lookup_value(godot::TreeItem* item, const lua::I_variant* value);
     void _clear_reference_lookup_list();
 
+    bool _is_local_table_not_full(const I_local_table_var* ltvar);
+
   protected:
     struct _reference_lookup_data{
       std::set<uint64_t> item_list;
     };
 
 
-    std::set<lua::comparison_variant> _filter_key = {
+    std::set<lua::comparison_variant> _local_filter_key = {
       lua::string_var("(*temporary)")
     };
 

@@ -25,6 +25,10 @@ GlobalLogger="*res://scenes/autoloads/Logger.tscn"
 GlobalUserVariables="*res://scenes/autoloads/global_variables.tscn"
 GlobalLibLuaHandle="*res://scenes/autoloads/LibLuaHandle.tscn"
 GlobalLuaProgramHandle="*res://scenes/autoloads/LuaProgramHandle.tscn"
+GlobalApplicationConfig="*res://scenes/autoloads/ApplicationConfigData.tscn"
+GlobalApplicationMetadata="*res://scenes/autoloads/ApplicationMetadata.tscn"
+GlobalApplicationMetadataUpdater="*res://scenes/autoloads/ApplicationMetadataUpdater.tscn"
+GlobalWindowUpdater="*res://scenes/autoloads/WindowUpdater.tscn"
 
 [input]
 

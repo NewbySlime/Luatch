@@ -404,6 +404,39 @@ void LuaVariableTree::_clear_reference_lookup_list(){
 }
 
 
+bool LuaVariableTree::_is_local_table_not_full(const I_local_table_var* ltvar){
+  bool _res = false;
+  const I_variant** _key_list = ltvar->get_keys();
+  for(int i = 0; _key_list[i]; i++){
+    const I_variant* _key = _key_list[i];
+    if(_local_filter_key.find(_key) != _local_filter_key.end())
+      continue;
+
+    const I_variant* _value = ltvar->get_value(_key);
+  { // enclosure for using gotos
+    if(!_value){
+      _res = true;
+      goto skip_local_table_check;
+    }
+    
+    if(_value->get_type() == I_nil_var::get_static_lua_type()){
+      _res = true;
+      goto skip_local_table_check;
+    }
+  } // enclosure closing
+
+    skip_local_table_check:{}
+    if(_value)
+      ltvar->free_variant(_value);
+
+    if(_res)
+      break;
+  }
+
+  return _res;
+}
+
+
 void LuaVariableTree::_update_tree_item(TreeItem* item, _item_state* state){
   auto _iter = _vartree_map.find(item->get_instance_id());
   if(_iter == _vartree_map.end())
@@ -458,8 +491,8 @@ void LuaVariableTree::_reveal_tree_item(TreeItem* item, _item_state* state){
   std::vector<_query_key_value> _queried_list;
   for(int i = 0; _keys_list[i]; i++){
     const I_variant* _key_data = _keys_list[i];
-    auto _filter_iter = _filter_key.find(_key_data);
-    if(_filter_iter != _filter_key.end())
+    auto _filter_iter = _local_filter_key.find(_key_data);
+    if(_filter_iter != _local_filter_key.end())
       continue;
     
     if(this->_check_ignored_variable(_iter->second, _key_data))
@@ -959,7 +992,7 @@ void LuaVariableTree::_variable_setter_do_popup_add_table_item(TreeItem* parent_
       const I_variant* _key_var = _key_list[i];
       const I_variant* _value_var = _tvar->get_value(_key_var);
       if(_value_var->get_type() != I_nil_var::get_static_lua_type() ||
-        _filter_key.find(_key_var) != _filter_key.end())
+        _local_filter_key.find(_key_var) != _local_filter_key.end())
         continue;
 
       string_store _str; _key_var->to_string(&_str);
@@ -1056,6 +1089,7 @@ void LuaVariableTree::_open_context_menu(){
     }
   }
 
+  bool _local_variable_space_exists = false;
   bool _has_table_parent = false;
   TreeItem* _parent_item = _last_selected_item->get_parent();
   if(_parent_item){
@@ -1066,6 +1100,13 @@ void LuaVariableTree::_open_context_menu(){
 
     if(!_parent_iter->second->this_value || !_parent_iter->second->this_value->is_type(I_table_var::get_static_lua_type()))
       goto skip_parent_checking;
+
+    if(_parent_iter->second->this_value->get_type() == I_local_table_var::get_static_lua_type()){
+      I_local_table_var* _ltvar = dynamic_cast<I_local_table_var*>(_parent_iter->second->this_value);
+
+      _ltvar->update_keys();
+      _local_variable_space_exists = _is_local_table_not_full(_ltvar);
+    }
 
     _has_table_parent = true;
 } // enclosure closing
@@ -1106,10 +1147,17 @@ void LuaVariableTree::_open_context_menu(){
       }
 
       break; case I_local_table_var::get_static_lua_type():{
+        // check if empty
+        I_local_table_var* _ltvar = dynamic_cast<I_local_table_var*>(_iter->second->this_value);
+        _ltvar->update_keys();
+        bool _local_table_empty = _is_local_table_not_full(_ltvar);
+
           _tmp_part = PopupContextMenu::MenuData::Part();
           _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
           _tmp_part.label = gd_format_str("Add Local Variable");
           _tmp_part.id = context_menu_add_table;
+          _tmp_part.is_disabled = !_local_table_empty;
+          _tmp_part.tooltip_text = _local_variable_space_exists? "": "No empty local variables to add.";
         _data.part_list.insert(_data.part_list.end(), _tmp_part);
       }
     }
@@ -1123,20 +1171,8 @@ void LuaVariableTree::_open_context_menu(){
 
     if(_iter->second->_mflag & metadata_local_item){
       _tmp_part.label = "Add Local Variable";
-
-{ // enclosure for using gotos
-      TreeItem* _parent_item = _iter->second->this_item;
-      if(!_parent_item)
-        goto skip_add_local_var_check;
-
-      auto _parent_iter = _vartree_map.find(_parent_item->get_instance_id());
-      if(_parent_iter == _vartree_map.end())
-        goto skip_add_local_var_check;
-
-      
-} // enclosure closing
-
-      skip_add_local_var_check:{}
+      _tmp_part.is_disabled = !_local_variable_space_exists;
+      _tmp_part.tooltip_text = _local_variable_space_exists? "": "No empty local variables to add.";
     }
 
     _data.part_list.insert(_data.part_list.end(), _tmp_part);

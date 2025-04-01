@@ -98,3 +98,12 @@ Variant OptionListMenu::get_value_data(const String& key) const{
 
   return _iter->second->get_option_value();
 }
+
+
+Array OptionListMenu::get_option_keys() const{
+  Array _res;
+  for(auto _pair: _option_lists)
+    _res.append(_pair.first);
+
+  return _res;
+}

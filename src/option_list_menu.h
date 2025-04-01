@@ -35,6 +35,8 @@ class OptionListMenu: public godot::Control{
 
     void set_value_data(const godot::String& key, const godot::Variant& value);
     godot::Variant get_value_data(const godot::String& key) const;
+
+    godot::Array get_option_keys() const;
 };
 
 #endif

@@ -4,11 +4,14 @@
 #include <godot_cpp/godot.hpp>
 
 // includes for registered class
+#include "application_config_data.h"
+#include "application_metadata.h"
 #include "code_context.h"
 #include "code_context_menu.h"
 #include "code_flow_control.h"
 #include "code_window.h"
 #include "console_window.h"
+#include "data_node.h"
 #include "execution_context.h"
 #include "focus_area.h"
 #include "global_variables.h"
@@ -21,6 +24,7 @@
 #include "option_control.h"
 #include "option_list_menu.h"
 #include "option_value_control.h"
+#include "persistance_node.h"
 #include "popup_context_menu.h"
 #include "popup_variable_setter.h"
 #include "property_modifier/chosen_state_modulate.h"
@@ -30,6 +34,7 @@
 #include "split_ratio_maintainer.h"
 #include "variable_storage.h"
 #include "variable_watcher.h"
+#include "window_updater.h"
 
 using namespace godot;
 
@@ -40,12 +45,14 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   }
 
   // set all the class here
+  ClassDB::register_class<WindowUpdater>();
   ClassDB::register_class<ChosenStateModulate>();
   ClassDB::register_class<CodeContext>();
   ClassDB::register_class<CodeContextMenu>();
   ClassDB::register_class<CodeFlowControl>();
   ClassDB::register_class<CodeWindow>();
   ClassDB::register_class<ConsoleWindow>();
+  ClassDB::register_class<DataNode>();
   ClassDB::register_class<ExecutionContext>();
   ClassDB::register_class<FocusArea>();
   ClassDB::register_class<GameUtils::Logger>();
@@ -58,6 +65,7 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<OptionControl>();
   ClassDB::register_class<OptionListMenu>();
   ClassDB::register_class<OptionValueControl>();
+  ClassDB::register_abstract_class<PersistanceNode>();
   ClassDB::register_class<PopupContextMenu>();
   ClassDB::register_class<PopupVariableSetter>();
   ClassDB::register_class<ReferenceQueryMenu>();
@@ -66,6 +74,10 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<SplitRatioMaintainer>();
   ClassDB::register_class<VariableStorage>();
   ClassDB::register_class<VariableWatcher>();
+
+  // inheriting class
+  ClassDB::register_class<ApplicationConfigData>();
+  ClassDB::register_class<ApplicationMetadata>();
 }
 
 void uninitialize_gdextension_module(ModuleInitializationLevel p_level) {

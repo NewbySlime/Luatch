@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d2rhdhpp1c4c0"]
+
+[node name="ApplicationConfigData" type="ApplicationConfigData"]
+default_data = {
+"ignore_internal_data": true
+}

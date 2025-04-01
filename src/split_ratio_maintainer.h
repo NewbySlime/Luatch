@@ -26,11 +26,18 @@ class SplitRatioMaintainer: public godot::Node{
     godot::Array _obj_list;
     bool _find_in_children = false;
 
+    godot::Callable _store_set_function;
+    godot::Callable _store_get_function;
+
+    std::vector<godot::Callable> _list_update_cb;
+
     std::map<uint64_t, split_container_metadata> _container_metadata;
 
     void _on_split_dragged(int offset, godot::Node* node);
     void _on_size_changed(godot::Node* node);
     void _on_node_deleted(godot::Node* node);
+
+    void _on_data_loaded();
 
     void _register_object(godot::SplitContainer* node);
     void _register_children(godot::Node* node);
@@ -38,11 +45,14 @@ class SplitRatioMaintainer: public godot::Node{
     void _update_container_ratio(uint64_t id);
     void _resize_container(uint64_t id);
 
+    void _set_container_ratio(uint64_t id, float ratio);
+
   protected:
     static void _bind_methods();
 
   public:
     void _ready() override;
+    void _process(double delta) override;
 
     void set_target_object_list(const godot::Array& list);
     godot::Array get_target_object_list() const;

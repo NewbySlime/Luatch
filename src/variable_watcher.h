@@ -30,10 +30,6 @@ class VariableWatcher: public LuaVariableTree{
       context_menu_add_to_storage_reference   = 0x10002
     };
 
-    std::set<lua::comparison_variant> _filter_key = {
-      lua::string_var("(*temporary)")
-    };
-
     LibLuaHandle* _lua_lib;
     std::shared_ptr<LibLuaStore> _lua_lib_data;
 

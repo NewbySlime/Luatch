@@ -36,9 +36,9 @@ for v in source_list:
 
 if env["target"] == "template_debug":
     env.Append(CXXFLAGS=["/Z7", "/FS"])
-    env.Append(LINKFLAGS=["/DEBUG", cpplua_staticlib_path])
+    env.Append(LINKFLAGS=["/DEBUG", cpplua_staticlib_path, "Advapi32.lib"])
 else:
-    env.Append(LINKFLAGS=[cpplua_staticlib_path])
+    env.Append(LINKFLAGS=[cpplua_staticlib_path, "Advapi32.lib"])
 
 if env["platform"] == "macos":
     library = env.SharedLibrary(

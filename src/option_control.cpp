@@ -3,6 +3,7 @@
 #include "gdutils.h"
 #include "logger.h"
 #include "option_control.h"
+#include "persistance_node.h"
 #include "strutil.h"
 
 #include "godot_cpp/classes/engine.hpp"
@@ -14,10 +15,6 @@
 using namespace gdutils;
 using namespace godot;
 
-
-const char* OptionControl::default_option_config_file_path = "option.cfg";
-const char* OptionControl::default_config_gvarname = "default_config_data";
-const char* OptionControl::expected_config_vartype_gvarname = "expected_config_vartype";
 
 const char* OptionControl::gvar_object_node_path = "option_control_path";
 
@@ -32,6 +29,7 @@ void OptionControl::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_option_button_pressed"), &OptionControl::_on_option_button_pressed);
   ClassDB::bind_method(D_METHOD("_on_option_focus_exited"), &OptionControl::_on_option_focus_exited);
   ClassDB::bind_method(D_METHOD("_on_option_list_menu_ready", "node"), &OptionControl::_on_option_list_menu_ready);
+  ClassDB::bind_method(D_METHOD("_on_config_loaded"), &OptionControl::_on_config_loaded);
 
   ClassDB::bind_method(D_METHOD("set_logo_settings_image", "image"), &OptionControl::set_logo_settings_image);
   ClassDB::bind_method(D_METHOD("get_logo_settings_image"), &OptionControl::get_logo_settings_image);
@@ -80,15 +78,24 @@ void OptionControl::_on_option_focus_exited(){
 
 
 void OptionControl::_on_option_list_menu_ready(Node* node){
+  _is_option_menu_ready = true;
+  _update_option_ui();
+}
+
+
+void OptionControl::_on_config_loaded(){
   _update_option_ui();
 }
 
 
 void OptionControl::_update_option_ui(){
-  Array _key_list = _option_data.keys();
+  if(!_is_option_menu_ready)
+    return;
+
+  Array _key_list = _option_menu->get_option_keys();
   for(int i = 0; i < _key_list.size(); i++){
     Variant _key = _key_list[i];
-    Variant _value = _option_data[_key];
+    Variant _value = _data_get_function.call(_key);
 
     _option_menu->set_value_data(_key, _value);
   }
@@ -165,35 +172,17 @@ void OptionControl::_ready(){
     goto on_error_label;
   }
 
-{ // enclosure for checking default config data
-  Variant _val = _gvariables->get_global_value(OptionControl::default_config_gvarname);
-  if(_val.get_type() != Variant::DICTIONARY)
-    GameUtils::Logger::print_warn_static("[OptionControl] Default config data is not a valid Dictionary type.");
-} // enclosure closing
-
-{ // enclosure for checking expected config vartype data
-  const VariantTypeParser& _type_parser = _gvariables->get_type_parser();
-  Dictionary _vartype_data;
-  Array _key_list;
-  Variant _val = _gvariables->get_global_value(OptionControl::expected_config_vartype_gvarname);
-  if(_val.get_type() != Variant::DICTIONARY){
-    GameUtils::Logger::print_warn_static("[OptionControl] Expected config vartype is not a valid Dictionary type.");
-    goto skip_checking;
+  PersistanceNode* _data_node = get_node<PersistanceNode>("/root/GlobalApplicationConfig");
+  if(!_data_node){
+    GameUtils::Logger::print_err_static("[OptionControl] Cannot get Application Config Data.");
+    goto on_error_label;
   }
 
-  _vartype_data = _val;
-  _key_list = _vartype_data.keys();
-  for(int i = 0; i < _key_list.size(); i++){
-    Variant _key = _key_list[i];
-    Variant _value = _vartype_data[_key];
-
-    if(!_type_parser.is_valid_type(_value)){
-      GameUtils::Logger::print_warn_static(gd_format_str("[OptionControl] Value '{0}' is not a valid expected type.", _key));
-    }
-  }
-
-  skip_checking:{}
-} // enclosure closing
+  _data_set_function = Callable(_data_node, "set_data");
+  _data_get_function = Callable(_data_node, "get_data");
+  _data_node->connect(PersistanceNode::s_data_loaded, Callable(this, "_on_config_loaded"));
+  if(_data_node->is_data_loaded())
+    _on_config_loaded();
 
   _gvariables->set_global_value(OptionControl::gvar_object_node_path, get_path());
 
@@ -202,13 +191,6 @@ void OptionControl::_ready(){
 
   _settings_button->connect("pressed", Callable(this, "_on_option_button_pressed"));
   _settings_unfocus_area->connect("focus_entered", Callable(this, "_on_option_focus_exited"));
-
-  Error _err_check = load_option_data(false);
-  if(_err_check != OK){
-    GameUtils::Logger::print_err_static("[OptionControl] Cannot load option configuration data.");
-    _quit_code = _err_check;
-    goto on_error_label;
-  }
 } // enclosure closing
 
   return;
@@ -221,119 +203,16 @@ void OptionControl::_ready(){
 }
 
 
-Error OptionControl::save_option_data(){
-  Ref<FileAccess> _file = FileAccess::open(_config_file_path, FileAccess::WRITE);
-  if(_file.is_null()){
-    GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Cannot open file. Error code: {0}", FileAccess::get_open_error()));
-    return FileAccess::get_open_error();
-  }
-
-  Array _key_list = _option_data.keys();
-  for(int i = 0; i < _key_list.size(); i++){
-    Variant _key = _key_list[i];
-    Variant _value = _option_data[_key];
-
-    _file->store_line(gd_format_str("{0}: {1}", _key, _value));
-  }
-
-  return OK;
-}
-
-Error OptionControl::load_option_data(bool update_ui){
-  const VariantTypeParser& _type_parser = _gvariables->get_type_parser();
-
-  _option_data.clear();
-
-  Dictionary _default_data;
-  Variant _default_data_val = _gvariables->get_global_value(OptionControl::default_config_gvarname);
-  if(_default_data_val.get_type() != Variant::DICTIONARY){
-    GameUtils::Logger::print_warn_static(gd_format_str("[OptionControl] Config file: Global variable '{0}' is not a valid Dictionary.", OptionControl::default_config_gvarname));
-  }
-  else
-    _default_data = _default_data_val;
-
-  _option_data = _default_data;
-    
-  // if config file is not present, create a new one
-  Ref<FileAccess> _file = FileAccess::open(_config_file_path, FileAccess::READ);
-  if(_file.is_null())
-    return save_option_data();
-
-  Dictionary _vartype_data;
-  Variant _vartype_data_val = _gvariables->get_global_value(OptionControl::expected_config_vartype_gvarname);
-  if(_vartype_data_val.get_type() != Variant::DICTIONARY){
-    GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Global variable '{0}' is not a valid Dictionary.", OptionControl::expected_config_vartype_gvarname));
-    return ERR_UNCONFIGURED;
-  }
-
-  _vartype_data = _vartype_data_val;
-
-  // Vartype validity already checked in _ready()
-
-  size_t _curr_line = 0;
-  while(!_file->eof_reached()){
-    _curr_line++;
-
-    PackedStringArray _arr;
-    String _line_data = _file->get_line();
-    _arr = _line_data.split(" \t", false);
-    if(_arr.size() <= 0)
-      continue;
-
-    int64_t _idx = _line_data.find(":");
-    if(_idx < 0){
-      GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Cannot determine end of key string at line {0}.", _curr_line));
-      continue;
-    }
-
-    if((_idx+1) >= _line_data.length()){
-      GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Empty value at line {0}?", _curr_line));
-      continue;
-    }
-
-    String _key_str = _line_data.substr(0, _idx);
-    String _value_str = _line_data.substr(_idx+1);
-
-    if(!_vartype_data.has(_key_str)){
-      GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Expected variant type for '{0}' not found.", _key_str));
-      continue;
-    }
-
-    Variant _expected_type_str = _vartype_data[_key_str];
-    if(!_type_parser.is_valid_type(_expected_type_str))
-      continue;
-
-    Variant::Type _expected_type = _type_parser.parse_str_to_type(_expected_type_str);
-    String _err_msg;
-    Variant _parsed_value = parse_str_to_var(_expected_type, _value_str, &_err_msg);
-    if(_parsed_value.get_type() == Variant::NIL){
-      GameUtils::Logger::print_err_static(gd_format_str("[OptionControl] Config file: Cannot parse value '{0}'. Reason; {1}", _key_str, _err_msg));
-      continue;
-    }
-
-    set_option_value(_key_str, _parsed_value, update_ui);
-
-    // NOTE: default type is store as string.
-  }
-
-  return OK;
-}
-
-
 void OptionControl::set_option_value(const String& key, const Variant& value, bool update_ui){
-  _option_data[key] = value;
+  _data_set_function.call(key, value);
   if(update_ui)
     _option_menu->set_value_data(key, value);
   
   emit_signal(s_value_set, key, value);
-  save_option_data();
 }
 
 Variant OptionControl::get_option_value(const String& key){
-  if(!_option_data.has(key))
-    return Variant();
-
-  return _option_data[key];
+  return _data_get_function.call(key);
 }
 
 

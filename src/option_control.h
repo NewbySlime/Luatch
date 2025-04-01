@@ -17,10 +17,6 @@ class OptionControl: public godot::Node{
   GDCLASS(OptionControl, godot::Node)
 
   public:
-    static const char* default_option_config_file_path;
-    static const char* default_config_gvarname;
-    static const char* expected_config_vartype_gvarname;
-
     static const char* gvar_object_node_path;
 
     // Param:
@@ -36,7 +32,6 @@ class OptionControl: public godot::Node{
     godot::NodePath _settings_button_path;
     godot::NodePath _settings_unfocus_area_path;
     godot::NodePath _option_menu_path;
-    godot::String _config_file_path = default_option_config_file_path;
 
     GlobalVariables* _gvariables;    
 
@@ -46,9 +41,11 @@ class OptionControl: public godot::Node{
 
     OptionListMenu* _option_menu;
 
-    godot::Dictionary _option_data;
+    godot::Callable _data_set_function;
+    godot::Callable _data_get_function;
 
     bool _is_showing = false;
+    bool _is_option_menu_ready = false;
 
     void _on_value_set(const godot::String& key, const godot::Variant& value);
 
@@ -56,6 +53,8 @@ class OptionControl: public godot::Node{
     void _on_option_focus_exited();
 
     void _on_option_list_menu_ready(godot::Node* node);
+
+    void _on_config_loaded();
 
     void _update_option_ui();
 
@@ -68,9 +67,6 @@ class OptionControl: public godot::Node{
 
   public:
     void _ready() override;
-
-    godot::Error save_option_data();
-    godot::Error load_option_data(bool update_ui = true);
 
     void set_option_value(const godot::String& key, const godot::Variant& value, bool update_ui = true);
     godot::Variant get_option_value(const godot::String& key);

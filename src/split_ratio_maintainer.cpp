@@ -1,3 +1,5 @@
+#include "application_metadata.h"
+#include "error_trigger.h"
 #include "logger.h"
 #include "split_ratio_maintainer.h"
 #include "strutil.h"
@@ -9,6 +11,7 @@
 #include "godot_cpp/classes/window.hpp"
 
 
+using namespace ErrorTrigger;
 using namespace godot;
 
 
@@ -16,6 +19,9 @@ void SplitRatioMaintainer::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_split_dragged", "offset", "node"), &SplitRatioMaintainer::_on_split_dragged);
   ClassDB::bind_method(D_METHOD("_on_size_changed", "node"), &SplitRatioMaintainer::_on_size_changed);
   ClassDB::bind_method(D_METHOD("_on_node_deleted", "node"), &SplitRatioMaintainer::_on_node_deleted);
+  ClassDB::bind_method(D_METHOD("_on_data_loaded"), &SplitRatioMaintainer::_on_data_loaded);
+
+  ClassDB::bind_method(D_METHOD("_set_container_ratio", "id", "ratio"), &SplitRatioMaintainer::_set_container_ratio);
 
   ClassDB::bind_method(D_METHOD("set_target_object_list", "list"), &SplitRatioMaintainer::set_target_object_list);
   ClassDB::bind_method(D_METHOD("get_target_object_list"), &SplitRatioMaintainer::get_target_object_list);
@@ -30,6 +36,17 @@ void SplitRatioMaintainer::_bind_methods(){
 
 void SplitRatioMaintainer::_on_split_dragged(int offset, Node* node){
   _update_container_ratio(node->get_instance_id());
+
+  auto _iter = _container_metadata.find(node->get_instance_id());
+  if(_iter == _container_metadata.end())
+    return;
+
+  Dictionary _object_data_dict = _store_get_function.call("object_data");
+  Dictionary _data_dict = _object_data_dict[node->get_path()];
+    _data_dict["ratio"] = _iter->second.ratio;
+
+  _object_data_dict[node->get_path()] = _data_dict; 
+  _store_set_function.call("object_data", _object_data_dict);
 }
 
 void SplitRatioMaintainer::_on_size_changed(Node* node){
@@ -42,6 +59,20 @@ void SplitRatioMaintainer::_on_node_deleted(Node* node){
     return;
 
   _container_metadata.erase(_iter);
+}
+
+
+void SplitRatioMaintainer::_on_data_loaded(){
+  Dictionary _object_data_dict = _store_get_function.call("object_data");
+  for(auto _pair: _container_metadata){
+    String _path = _pair.second.scontainer->get_path();
+    if(!_object_data_dict.has(_path))
+      continue;
+
+    Dictionary _data_dict = _object_data_dict[_path];
+    float _ratio = _data_dict["ratio"];
+    _list_update_cb.insert(_list_update_cb.end(), Callable(this, "_set_container_ratio").bind(_pair.first, _ratio));
+  }
 }
 
 
@@ -166,10 +197,29 @@ void SplitRatioMaintainer::_resize_container(uint64_t id){
 }
 
 
+void SplitRatioMaintainer::_set_container_ratio(uint64_t id, float ratio){
+  auto _iter = _container_metadata.find(id);
+  if(_iter == _container_metadata.end())
+    return;
+
+  _iter->second.ratio = ratio;
+  _resize_container(id);
+}
+
+
 void SplitRatioMaintainer::_ready(){
   Engine* _engine = Engine::get_singleton();
   if(_engine->is_editor_hint())
     return;
+  
+  int _quit_code = 0;
+{ // enclosure for using gotos
+  ApplicationMetadata* _metadata = get_node<ApplicationMetadata>("/root/GlobalApplicationMetadata");
+  if(!_metadata){
+    GameUtils::Logger::print_err_static("[SplitRatioMaintainer] Cannot get Global ApplicationMetadata.");
+    _quit_code = ERR_UNCONFIGURED;
+    goto on_error;
+  }
 
   SceneTree* _tree = get_tree();
   _tree->connect("node_removed", Callable(this, "_on_node_deleted"));
@@ -185,6 +235,34 @@ void SplitRatioMaintainer::_ready(){
     NodePath _node_path = _var;
     SplitContainer* _node = get_node<SplitContainer>(_node_path);
     _register_object(_node);
+  }
+
+  _store_get_function = Callable(_metadata, "get_data");
+  _store_set_function = Callable(_metadata, "set_data");
+  _metadata->connect(ApplicationMetadata::s_data_loaded, Callable(this, "_on_data_loaded"));
+  if(_metadata->is_data_loaded())
+    _on_data_loaded();
+} // enclosure closing
+
+  return;
+
+
+  on_error:{
+    trigger_generic_error_message();
+    get_tree()->quit(_quit_code);
+  }
+}
+
+void SplitRatioMaintainer::_process(double delta){
+  Engine* _engine = Engine::get_singleton();
+  if(_engine->is_editor_hint())
+    return;
+
+  if(_list_update_cb.size()){
+    for(Callable& cb: _list_update_cb)
+      cb.call();
+
+    _list_update_cb.clear();
   }
 }
 
