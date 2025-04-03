@@ -12,8 +12,6 @@ class WindowUpdater: public godot::Node{
     godot::Callable _data_set_function;
     godot::Callable _data_get_function;
 
-    godot::Vector2i _minimal_window_size;
-
     godot::Vector2i _last_window_position;
     int _last_window_mode;
 
@@ -26,9 +24,6 @@ class WindowUpdater: public godot::Node{
   public:
     void _ready() override;
     void _process(double delta) override;
-
-    void set_minimal_window_size(const godot::Vector2i& min_size);
-    godot::Vector2i get_minimal_window_size() const;
 };
 
 #endif

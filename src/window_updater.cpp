@@ -15,9 +15,6 @@ void WindowUpdater::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_data_loaded"), &WindowUpdater::_on_data_loaded);
   ClassDB::bind_method(D_METHOD("_on_window_size_changed", "window_node"), &WindowUpdater::_on_window_size_changed);
 
-  ClassDB::bind_method(D_METHOD("set_minimal_window_size", "min_size"), &WindowUpdater::set_minimal_window_size);
-  ClassDB::bind_method(D_METHOD("get_minimal_window_size"), &WindowUpdater::get_minimal_window_size);
-
   ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "minimal_window_size"), "set_minimal_window_size", "get_minimal_window_size");
 }
 
@@ -66,7 +63,6 @@ void WindowUpdater::_ready(){
   }
 
   Window* _root_window = get_tree()->get_root();
-  _root_window->set_min_size(_minimal_window_size);
   _root_window->connect("size_changed", Callable(this, "_on_window_size_changed").bind(_root_window));
 
   _data_set_function = Callable(_metadata, "set_data");
@@ -103,13 +99,4 @@ void WindowUpdater::_process(double delta){
     _last_window_mode = _window_mode;
     _data_set_function.call("last_window_mode", _last_window_mode);
   }
-}
-
-
-void WindowUpdater::set_minimal_window_size(const Vector2i& min_size){
-  _minimal_window_size = min_size;
-}
-
-Vector2i WindowUpdater::get_minimal_window_size() const{
-  return _minimal_window_size;
 }

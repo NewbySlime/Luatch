@@ -76,6 +76,8 @@ class CodeWindow: public godot::TabContainer{
     void _on_breakpoint_removed(int line, uint64_t id);
     void _on_file_cannot_open(godot::String file_path, int error_code);
 
+    void _on_files_dropped(const godot::PackedStringArray& file_list);
+
     void _lua_on_started();
     void _lua_on_paused();
     void _lua_on_stopped();

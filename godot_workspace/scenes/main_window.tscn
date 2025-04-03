@@ -196,33 +196,33 @@ border_color = Color(0.351563, 0.351563, 0.351563, 1)
 corner_radius_top_left = 8
 corner_radius_bottom_left = 8
 
-[node name="Control" type="Control"]
-layout_mode = 3
+[node name="MainNode" type="MarginContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="UIControl" type="UIControl" parent="."]
+target_min_size_node = NodePath("..")
+
+[node name="GroupInvoker" type="GroupInvoker" parent="UIControl"]
+group_node_data = {
+"code_window_group": [NodePath("../../VSplitContainer/HSplitContainer/CodeWindow")],
+"console_window_group": [NodePath("../../VSplitContainer/ConsoleWindow")],
+"inspector_group": [NodePath("../../VSplitContainer/HSplitContainer/InspectWindowContainer")]
+}
+recursive_invoke = true
 
 [node name="SplitRatioMaintainer" type="SplitRatioMaintainer" parent="."]
 target_object_list = [NodePath("../VSplitContainer"), NodePath("../VSplitContainer/HSplitContainer")]
 
 [node name="Panel" type="Panel" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1wdwd")
 
 [node name="VSplitContainer" type="VSplitContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 theme_override_constants/separation = 0
 theme_override_constants/autohide = 0
 
@@ -591,12 +591,7 @@ theme_override_fonts/font = ExtResource("14_yx8cj")
 placeholder_text = "Input here"
 
 [node name="SettingsArea" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 mouse_filter = 2
 
 [node name="UnfocusArea" type="FocusArea" parent="SettingsArea"]
@@ -717,37 +712,112 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="OptionValueControl" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="IgnoreInternalDataOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "ignore_internal_data"
 physics_interpolation_mode = 0
 custom_minimum_size = Vector2(44, 24)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/OptionValueControl"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/OptionValueControl/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_n2lrs")
 text = "Ignore Internal Data"
 
-[node name="CheckButton" type="CheckButton" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/OptionValueControl/HBoxContainer"]
+[node name="CheckButton" type="CheckButton" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 10
+
+[node name="CodeWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "code_window_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Code Window Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+allow_greater = true
+suffix = "px"
+
+[node name="InspectorFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "inspector_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Inspector Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+allow_greater = true
+suffix = "px"
+
+[node name="ConsoleWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "console_window_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Console Window Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+value = 1.0
+allow_greater = true
+suffix = "px"
+
+[node name="UIScaleOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "ui_scale"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UI Scale"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 40.0
+value = 40.0
+allow_greater = true
+suffix = "%"
 
 [node name="SplashPanel" type="SplashPanel" parent="."]
 reset_control_node_path = NodePath("Panel")
 physics_interpolation_mode = 0
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
-grow_vertical = 0
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
 
 [node name="SlideAnimationControl" type="SlideAnimationControl" parent="SplashPanel"]
 slide_value = 1.0
@@ -762,11 +832,15 @@ libraries = {
 
 [node name="Panel" type="Panel" parent="SplashPanel"]
 custom_minimum_size = Vector2(240, 64)
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -240.0
 offset_top = -64.0
+grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_eswy0")
 

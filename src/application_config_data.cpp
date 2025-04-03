@@ -6,6 +6,7 @@
 using namespace godot;
 
 
+const char* ApplicationConfigData::s_data_changed = "data_changed";
 const char* ApplicationConfigData::default_option_config_file_path = "config.json";
 
 
@@ -18,6 +19,8 @@ void ApplicationConfigData::_bind_methods(){
 
   ADD_PROPERTY(PropertyInfo(Variant::STRING, "config_file_path", PropertyHint::PROPERTY_HINT_SAVE_FILE), "set_config_file_path", "get_config_file_path");
   ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "default_data"), "set_default_data", "get_default_data");
+  
+  ADD_SIGNAL(MethodInfo(ApplicationConfigData::s_data_changed, PropertyInfo(Variant::STRING, "key")));
 }
 
 
@@ -30,6 +33,8 @@ ApplicationConfigData::~ApplicationConfigData(){
 void ApplicationConfigData::_set_data(const Variant& key, const Variant& value){
   _file_handle->set_value(key, value);
   _file_handle->save_data();
+
+  emit_signal(ApplicationConfigData::s_data_changed, key);
 }
 
 Variant ApplicationConfigData::_get_data(const Variant& key){

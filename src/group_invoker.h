@@ -28,7 +28,11 @@ class GroupInvoker: public godot::Node{
     std::map<godot::String, _group_data*> _group_data_map;
     std::map<uint64_t, _group_data*> _node_group_lookup;
 
-    void _on_node_removed(godot::Node* node);    
+    bool _recursive_invoke = false;
+
+    void _on_node_removed(godot::Node* node);
+
+    void _recursive_call(godot::Node* node, const godot::String& func_name, const godot::Array& parameter);
 
     void _clear_group_data_map();
 
@@ -44,6 +48,9 @@ class GroupInvoker: public godot::Node{
     
     void set_group_node_data(const godot::Dictionary& data);
     godot::Dictionary get_group_node_data() const;
+
+    void set_recursive_invoke(bool flag);
+    bool get_recursive_invoke() const;
     
     template<typename... T_Vargs> void invoke(const godot::String& group_key, const godot::String& func_name, const T_Vargs&... args){
       invokev(group_key, func_name, gdutils::create_array(args...));

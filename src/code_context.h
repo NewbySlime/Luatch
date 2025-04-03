@@ -28,6 +28,10 @@ class CodeContext: public godot::Control{
     //  - INT: obj_id
     static const char* s_breakpoint_removed;
 
+    enum config_flag{
+      config_flag_allow_code_writing
+    };
+
   private:
     godot::NodePath _code_edit_path;
     godot::CodeEdit* _code_edit;
@@ -60,11 +64,15 @@ class CodeContext: public godot::Control{
 
     void _ready() override;
 
+    void save_file();
     // listen to s_cannot_load when an error happens
     void load_file(const std::string& file_path);
     // listen to s_cannot_load when an error happens
     void reload_file();
     std::string get_current_file_path() const;
+
+    void set_config_flag(int flag);
+    int get_config_flag();
 
     godot::String get_line_at(int line) const;
     int get_line_count() const;

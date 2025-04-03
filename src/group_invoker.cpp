@@ -17,7 +17,11 @@ void GroupInvoker::_bind_methods(){
   ClassDB::bind_method(D_METHOD("set_group_node_data", "data"), &GroupInvoker::set_group_node_data);
   ClassDB::bind_method(D_METHOD("get_group_node_data"), &GroupInvoker::get_group_node_data);
 
+  ClassDB::bind_method(D_METHOD("set_recursive_invoke", "flag"), &GroupInvoker::set_recursive_invoke);
+  ClassDB::bind_method(D_METHOD("get_recursive_invoke"), &GroupInvoker::get_recursive_invoke);
+
   ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "group_node_data"), "set_group_node_data", "get_group_node_data");
+  ADD_PROPERTY(PropertyInfo(Variant::BOOL, "recursive_invoke"), "set_recursive_invoke", "get_recursive_invoke");
 }
 
 
@@ -31,6 +35,17 @@ void GroupInvoker::_on_node_removed(Node* node){
     _iter->second->node_list.erase(_nl_iter);
 
   _node_group_lookup.erase(_iter);
+}
+
+
+void GroupInvoker::_recursive_call(Node* node, const String& func_name, const Array& parameter){
+  int _child_count = node->get_child_count();
+  for(int i = 0; i < _child_count; i++){
+    Node* _child_node = node->get_child(i);
+    _child_node->callv(func_name, parameter);
+    
+    _recursive_call(_child_node, func_name, parameter);
+  }
 }
 
 
@@ -111,8 +126,14 @@ void GroupInvoker::invokev(const String& group_key, const String& func_name, con
     return;
   }
 
-  for(Node* _node: _iter->second->node_list)
+  for(Node* _node: _iter->second->node_list){
     _node->callv(func_name, parameter);
+    
+    if(!_recursive_invoke)
+      continue;
+
+    _recursive_call(_node, func_name, parameter);
+  }
 }
 
 
@@ -122,4 +143,13 @@ void GroupInvoker::set_group_node_data(const Dictionary& data){
 
 Dictionary GroupInvoker::get_group_node_data() const{
   return _group_node_data;
+}
+
+
+void GroupInvoker::set_recursive_invoke(bool flag){
+  _recursive_invoke = flag;
+}
+
+bool GroupInvoker::get_recursive_invoke() const{
+  return _recursive_invoke;
 }

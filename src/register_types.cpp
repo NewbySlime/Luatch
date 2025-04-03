@@ -32,6 +32,7 @@
 #include "slide_animation_control.h"
 #include "splash_panel.h"
 #include "split_ratio_maintainer.h"
+#include "ui_control.h"
 #include "variable_storage.h"
 #include "variable_watcher.h"
 #include "window_updater.h"
@@ -72,6 +73,7 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<SlideAnimationControl>();
   ClassDB::register_class<SplashPanel>();
   ClassDB::register_class<SplitRatioMaintainer>();
+  ClassDB::register_class<UIControl>();
   ClassDB::register_class<VariableStorage>();
   ClassDB::register_class<VariableWatcher>();
 

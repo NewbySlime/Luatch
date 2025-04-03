@@ -17,6 +17,7 @@
 #include "godot_cpp/classes/project_settings.hpp"
 #include "godot_cpp/classes/resource_loader.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
+#include "godot_cpp/classes/window.hpp"
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 
@@ -39,6 +40,23 @@ const char* CodeWindow::s_code_cannot_open = "code_cannot_open";
 
 
 void CodeWindow::_bind_methods(){
+  ClassDB::bind_method(D_METHOD("_on_file_loaded", "file_path"), &CodeWindow::_on_file_loaded);
+  ClassDB::bind_method(D_METHOD("_on_breakpoint_added", "line", "id"), &CodeWindow::_on_breakpoint_added);
+  ClassDB::bind_method(D_METHOD("_on_breakpoint_removed", "line", "id"), &CodeWindow::_on_breakpoint_removed);
+  ClassDB::bind_method(D_METHOD("_on_file_cannot_open", "file_path", "error_code"), &CodeWindow::_on_file_cannot_open);
+  
+  ClassDB::bind_method(D_METHOD("_on_files_dropped", "file_list"), &CodeWindow::_on_files_dropped);
+
+  ClassDB::bind_method(D_METHOD("_lua_on_started"), &CodeWindow::_lua_on_started);
+  ClassDB::bind_method(D_METHOD("_lua_on_paused"), &CodeWindow::_lua_on_paused);
+  ClassDB::bind_method(D_METHOD("_lua_on_stopped"), &CodeWindow::_lua_on_stopped);
+  
+  ClassDB::bind_method(D_METHOD("_on_context_menu_button_pressed", "button_type"), &CodeWindow::_on_context_menu_button_pressed);
+  
+  ClassDB::bind_method(D_METHOD("_on_code_context_menu_ready_event", "obj"), &CodeWindow::_on_code_context_menu_ready_event);
+  
+  ClassDB::bind_method(D_METHOD("_on_thread_initialized"), &CodeWindow::_on_thread_initialized);
+
   ClassDB::bind_method(D_METHOD("get_code_context_scene_path"), &CodeWindow::get_code_context_scene_path);
   ClassDB::bind_method(D_METHOD("set_code_context_scene_path", "scene"), &CodeWindow::set_code_context_scene_path);
   ADD_PROPERTY(PropertyInfo(Variant::STRING, "code_context_scene", PROPERTY_HINT_FILE), "set_code_context_scene_path", "get_code_context_scene_path");
@@ -46,21 +64,6 @@ void CodeWindow::_bind_methods(){
   ClassDB::bind_method(D_METHOD("get_context_menu_path"), &CodeWindow::get_context_menu_path);
   ClassDB::bind_method(D_METHOD("set_context_menu_path", "path"), &CodeWindow::set_context_menu_path);
   ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "context_menu_path"), "set_context_menu_path", "get_context_menu_path");
-
-  ClassDB::bind_method(D_METHOD("_on_file_loaded", "file_path"), &CodeWindow::_on_file_loaded);
-  ClassDB::bind_method(D_METHOD("_on_breakpoint_added", "line", "id"), &CodeWindow::_on_breakpoint_added);
-  ClassDB::bind_method(D_METHOD("_on_breakpoint_removed", "line", "id"), &CodeWindow::_on_breakpoint_removed);
-  ClassDB::bind_method(D_METHOD("_on_file_cannot_open", "file_path", "error_code"), &CodeWindow::_on_file_cannot_open);
-
-  ClassDB::bind_method(D_METHOD("_lua_on_started"), &CodeWindow::_lua_on_started);
-  ClassDB::bind_method(D_METHOD("_lua_on_paused"), &CodeWindow::_lua_on_paused);
-  ClassDB::bind_method(D_METHOD("_lua_on_stopped"), &CodeWindow::_lua_on_stopped);
-
-  ClassDB::bind_method(D_METHOD("_on_context_menu_button_pressed", "button_type"), &CodeWindow::_on_context_menu_button_pressed);
-
-  ClassDB::bind_method(D_METHOD("_on_code_context_menu_ready_event", "obj"), &CodeWindow::_on_code_context_menu_ready_event);
-
-  ClassDB::bind_method(D_METHOD("_on_thread_initialized"), &CodeWindow::_on_thread_initialized);
 
   ADD_SIGNAL(MethodInfo(s_file_loaded, PropertyInfo(Variant::STRING, "file_path")));
   ADD_SIGNAL(MethodInfo(s_file_closed, PropertyInfo(Variant::STRING, "file_path")));
@@ -138,6 +141,14 @@ void CodeWindow::_on_file_cannot_open(String file_path, int error_code){
   GameUtils::Logger::print_err_static(_err_msg.c_str());
 
   close_code_context(_std_file_path);
+}
+
+
+void CodeWindow::_on_files_dropped(const PackedStringArray& file_list){
+  for(int i = 0; i < file_list.size(); i++){
+    String _file_path = file_list[i];
+    open_code_context(GDSTR_TO_STDSTR(_file_path));
+  }
 }
 
 
@@ -350,6 +361,9 @@ void CodeWindow::_ready(){
       goto on_error_label;
     }
   }
+
+  Window* _root_window = get_window();
+  _root_window->connect("files_dropped", Callable(this, "_on_files_dropped"));
 
   // delete all node that still as its child
   while(get_child_count() > 0){

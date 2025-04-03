@@ -9,6 +9,10 @@ class ApplicationConfigData: public PersistanceNode{
   GDCLASS(ApplicationConfigData, PersistanceNode)
 
   public:
+    // Param:
+    //  - STRING: key of modified value
+    static const char* s_data_changed;
+
     static const char* default_option_config_file_path;
 
   private:
