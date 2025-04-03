@@ -227,19 +227,18 @@ theme_override_constants/separation = 0
 theme_override_constants/autohide = 0
 
 [node name="HSplitContainer" type="HSplitContainer" parent="VSplitContainer"]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 theme_override_constants/separation = 0
 theme_override_constants/autohide = 0
 split_offset = 444
 
 [node name="CodeWindow" type="HBoxContainer" parent="VSplitContainer/HSplitContainer"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_constants/separation = 0
 
 [node name="Grouping" type="Control" parent="VSplitContainer/HSplitContainer/CodeWindow"]
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -320,7 +319,7 @@ tooltip_text = "Refresh the file."
 icon = ExtResource("12_ifwq8")
 
 [node name="InspectWindowContainer" type="Control" parent="VSplitContainer/HSplitContainer"]
-custom_minimum_size = Vector2(400, 0)
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 
 [node name="Panel" type="Panel" parent="VSplitContainer/HSplitContainer/InspectWindowContainer"]
@@ -538,7 +537,7 @@ warn_color = Color(0.902972, 0.655383, 3.85046e-07, 1)
 err_color = Color(0.925218, 0, 0.0756133, 1)
 placeholder_text = "Console Log Here"
 physics_interpolation_mode = 0
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 
 [node name="Panel" type="Panel" parent="VSplitContainer/ConsoleWindow"]
@@ -748,8 +747,8 @@ text = "Code Window Font"
 [node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
+max_value = 80.0
 value = 1.0
-allow_greater = true
 suffix = "px"
 
 [node name="InspectorFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
@@ -768,8 +767,8 @@ text = "Inspector Font"
 [node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
+max_value = 80.0
 value = 1.0
-allow_greater = true
 suffix = "px"
 
 [node name="ConsoleWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
@@ -788,8 +787,8 @@ text = "Console Window Font"
 [node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
+max_value = 80.0
 value = 1.0
-allow_greater = true
 suffix = "px"
 
 [node name="UIScaleOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
@@ -808,8 +807,8 @@ text = "UI Scale"
 [node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 40.0
+max_value = 200.0
 value = 40.0
-allow_greater = true
 suffix = "%"
 
 [node name="SplashPanel" type="SplashPanel" parent="."]

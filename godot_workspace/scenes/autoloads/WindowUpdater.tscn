@@ -1,4 +1,3 @@
 [gd_scene format=3 uid="uid://5ks0or4iw6eh"]
 
 [node name="WindowUpdater" type="WindowUpdater"]
-minimal_window_size = Vector2i(810, 612)
