@@ -14,11 +14,12 @@ class CodeContextMenu: public godot::Control{
     static const char* s_button_pressed;
 
     enum button_enum{
-      be_opening    = 0b1,
-      be_closing    = 0b10,
-      be_running    = 0b100,
-      be_refresh    = 0b1000,
-      be_allbutton  = 0b1111
+      be_opening    = 0b00001,
+      be_closing    = 0b00010,
+      be_running    = 0b00100,
+      be_refresh    = 0b01000,
+      be_save       = 0b10000,
+      be_allbutton  = 0b11111,
     };
 
 
@@ -30,6 +31,7 @@ class CodeContextMenu: public godot::Control{
     godot::Button* _closing_button;
     godot::Button* _running_button;
     godot::Button* _refresh_button;
+    godot::Button* _save_button;
 
     bool _initialized = false;
 
@@ -38,6 +40,7 @@ class CodeContextMenu: public godot::Control{
     void _closing_button_pressed();
     void _running_button_pressed();
     void _refresh_button_pressed();
+    void _save_button_pressed();
 
     typedef void (*_iterate_button_cb)(godot::Button* button, void* data);
     void _iterate_button(button_enum type, _iterate_button_cb cb, void* data);

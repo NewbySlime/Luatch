@@ -26,6 +26,8 @@ using namespace lua::debug;
 
 const char* CodeContext::s_file_loaded = "file_loaded";
 const char* CodeContext::s_cannot_load = "cannot_load";
+const char* CodeContext::s_file_saved = "file_saved";
+const char* CodeContext::s_cannot_save = "cannot_save";
 const char* CodeContext::s_breakpoint_added = "breakpoint_added";
 const char* CodeContext::s_breakpoint_removed = "breakpoint_removed";
 
@@ -40,6 +42,8 @@ void CodeContext::_bind_methods(){
 
   ADD_SIGNAL(MethodInfo(s_file_loaded, PropertyInfo(Variant::STRING, "file_path")));
   ADD_SIGNAL(MethodInfo(s_cannot_load, PropertyInfo(Variant::STRING, "file_path"), PropertyInfo(Variant::INT, "error_code")));
+  ADD_SIGNAL(MethodInfo(s_file_saved, PropertyInfo(Variant::STRING, "file_path")));
+  ADD_SIGNAL(MethodInfo(s_cannot_save, PropertyInfo(Variant::STRING, "file_path"), PropertyInfo(Variant::INT, "error_code")));
   ADD_SIGNAL(MethodInfo(s_breakpoint_added, PropertyInfo(Variant::INT, "line"), PropertyInfo(Variant::INT, "id")));
   ADD_SIGNAL(MethodInfo(s_breakpoint_removed, PropertyInfo(Variant::INT, "line"), PropertyInfo(Variant::INT, "id")));
   ADD_SIGNAL(MethodInfo(SIGNAL_ON_READY, PropertyInfo(Variant::OBJECT, "this_obj")));
@@ -108,16 +112,21 @@ long CodeContext::_check_valid_line(long check_line){
 
 
 void CodeContext::_load_file_check(bool retain_breakpoints){
-  if(!_initialized || _current_file_path.size() <= 0)
+  if(!_initialized)
     return;
 
-  godot::Error _result = godot::OK;
+  godot::Error _result = OK;
+
+  if(_current_file_path.size() <= 0){
+    _result = ERR_FILE_NOT_FOUND;
+    goto on_error;
+  }
 
 { // enclosure for using gotos
   Ref<FileAccess> _file_access = FileAccess::open(_current_file_path.c_str(), FileAccess::READ);
   if(_file_access.ptr() == NULL){
     _result = FileAccess::get_open_error();
-    goto skip_to_return;
+    goto on_error;
   }
 
   std::vector<int> _bp_lines = _breakpointed_list;
@@ -130,7 +139,7 @@ void CodeContext::_load_file_check(bool retain_breakpoints){
   _valid_lines.clear();
   if(!_lib_store.get()){
     GameUtils::Logger::print_warn_static("[CodeContext] LibLuaStore not loaded. Skipping file debug info.");
-    goto skip_to_return;
+    goto on_error;
   }
 
   const compilation_context* _func_data = _lib_store->get_function_data()->get_cc();
@@ -139,7 +148,7 @@ void CodeContext::_load_file_check(bool retain_breakpoints){
     string_store _err_obj_str; _fi->get_last_error()->to_string(&_err_obj_str);
     std::string _err_msg = format_str("[CodeContext] Cannot load debug info. Reason: %s", _err_obj_str.data.c_str());
     GameUtils::Logger::print_warn_static(_err_msg.c_str());
-    goto skip_to_return;
+    goto on_error;
   }
 
   for(int i = 0; i < _fi->get_line_count(); i++){
@@ -157,11 +166,15 @@ void CodeContext::_load_file_check(bool retain_breakpoints){
   }
 } // enclosure closure
 
-  skip_to_return:{}
-  if(_result == godot::OK)
-    emit_signal(s_file_loaded, String(_current_file_path.c_str()));
-  else
-    emit_signal(s_cannot_load, String(_current_file_path.c_str()), (int)_result);
+  emit_signal(s_file_loaded, String(_current_file_path.c_str()));
+
+  return;
+
+
+  on_error:{}
+
+  GameUtils::Logger::print_err_static(gd_format_str("[CodeContext] Cannot load file '{0}', Error code: {1}", _current_file_path.c_str(), _result));
+  emit_signal(s_cannot_load, String(_current_file_path.c_str()), (int)_result);
 }
 
 
@@ -196,7 +209,9 @@ void CodeContext::_ready(){
   _lib_store = _lib_handle->get_library_store();
 
   _initialized = true;
-  _load_file_check();
+  if(!_current_file_path.empty())
+    _load_file_check();
+    
   emit_signal(SIGNAL_ON_READY, this);
 } // enclosure closing
 
@@ -210,6 +225,36 @@ void CodeContext::_ready(){
 }
 
 
+void CodeContext::save_file(){
+  if(!_initialized || _current_file_path.empty())
+    return;
+
+  godot::Error _error = OK;
+
+{ // enclosure for using gotos
+  Ref<FileAccess> _file = FileAccess::open(_current_file_path.c_str(), FileAccess::WRITE);
+  if(_file.is_null()){
+    _error = FileAccess::get_open_error();
+    goto on_error;
+  }
+
+  _file->seek(0);
+  _file->seek_end(0);
+  _file->store_string(_code_edit->get_text());
+  _file->close();
+}
+
+  emit_signal(s_file_saved, _current_file_path.c_str());
+
+  return;
+
+
+  on_error:{}
+  
+  GameUtils::Logger::print_err_static(gd_format_str("[CodeContext] Cannot save file '{0}', Error code: {1}", _current_file_path.c_str(), _error));
+  emit_signal(s_cannot_save, _current_file_path.c_str(), _error);
+}
+
 void CodeContext::load_file(const std::string& file_path){
   bool _retain_bp = _current_file_path == file_path;
   _current_file_path = file_path;
@@ -222,6 +267,17 @@ void CodeContext::reload_file(){
 
 std::string CodeContext::get_current_file_path() const{
   return _current_file_path;
+}
+
+
+void CodeContext::set_config_flag(int flag){
+  _current_config = flag;
+  
+  _code_edit->set_editable(_current_config & config_flag_allow_code_writing);
+}
+
+int CodeContext::get_config_flag() const{
+  return _current_config;
 }
 
 
@@ -293,4 +349,8 @@ NodePath CodeContext::get_code_edit_path() const{
 
 bool CodeContext::is_initialized() const{
   return _initialized;
+}
+
+bool CodeContext::is_editable() const{
+  return _code_edit->is_editable();
 }

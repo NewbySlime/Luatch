@@ -13,6 +13,10 @@ gd_string_store::gd_string_store(const String& gdstr){
 }
 
 
+void gd_string_store::clear(){
+  this->data = "";
+}
+
 void gd_string_store::append(const char* data){
   this->data += data;
 }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://cgjecodaf2s77"]
+[gd_scene load_steps=40 format=3 uid="uid://cgjecodaf2s77"]
 
 [ext_resource type="PackedScene" uid="uid://bbpgcr0g21epu" path="res://scenes/clone/code_context.tscn" id="1_b2mtp"]
 [ext_resource type="SystemFont" uid="uid://c8jm14y54ky2t" path="res://resource/styles/text/code_font.tres" id="1_n2lrs"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://ck5adtau1uy1h" path="res://resource/images/logo/OpenLogo.png" id="4_t1ptk"]
 [ext_resource type="Texture2D" uid="uid://bdawqmxglaexi" path="res://resource/images/logo/CloseLogo.png" id="5_1pc77"]
 [ext_resource type="Texture2D" uid="uid://df8culy4t0ymo" path="res://resource/images/logo/ResumeLogo.png" id="6_nj6ib"]
+[ext_resource type="Texture2D" uid="uid://bedvwtljn3b1p" path="res://resource/images/logo/SaveLogo.png" id="7_8hkqq"]
 [ext_resource type="Texture2D" uid="uid://c2mbns6wbw0gx" path="res://resource/images/logo/PauseLogo.png" id="7_e624x"]
 [ext_resource type="Texture2D" uid="uid://cxyb3gf2vj7yi" path="res://resource/images/logo/StepInLogo.png" id="8_4qto1"]
 [ext_resource type="Texture2D" uid="uid://oldsxscq85dk" path="res://resource/images/logo/StepOutLogo.png" id="9_3d8kr"]
@@ -317,6 +318,10 @@ icon = ExtResource("5_1pc77")
 layout_mode = 2
 tooltip_text = "Refresh the file."
 icon = ExtResource("12_ifwq8")
+
+[node name="ButtonSave" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+icon = ExtResource("7_8hkqq")
 
 [node name="InspectWindowContainer" type="Control" parent="VSplitContainer/HSplitContainer"]
 custom_minimum_size = Vector2(300, 0)

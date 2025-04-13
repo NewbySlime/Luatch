@@ -12,6 +12,7 @@ global_data = {
 "global_confirmation_dialog_path": NodePath("ConfirmationDialog"),
 "global_context_menu_path": NodePath("ContextMenu"),
 "global_popup_variable_setter_path": NodePath("PopupMenu"),
+"temporary_base_path": "Luatch\\",
 "timer_scene": ExtResource("1_63vw4")
 }
 

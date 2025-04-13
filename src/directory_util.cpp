@@ -6,7 +6,9 @@
 
 
 
-const char* _path_seperator_filter = "/\\"; 
+const char* _path_separator_filter = "/\\"; 
+const char* _path_separator = "\\";
+const char* _extension_separator_filter = ".";
 const char* _dir_current_symbol = ".";
 const char* _dir_up_symbol = "..";
 
@@ -16,8 +18,8 @@ void DirectoryUtil::split_directory_string(const std::string& path, std::vector<
 
   size_t _idx = 0;
   while(_idx < path.size()){
-    _idx = path.find_first_not_of(_path_seperator_filter, _idx);
-    size_t _target_idx = path.find_first_of(_path_seperator_filter, _idx);
+    _idx = path.find_first_not_of(_path_separator_filter, _idx);
+    size_t _target_idx = path.find_first_of(_path_separator_filter, _idx);
     if(_target_idx != _idx)
       target_split_data.insert(target_split_data.end(), path.substr(_idx, _target_idx-_idx));
 
@@ -66,17 +68,25 @@ std::string DirectoryUtil::get_absolute_path(const std::string& path){
   }
 
   std::string _result;
-  for(auto _iter: _result_data)
-    _result += _iter;
+  for(int i = 0; i < _result_data.size(); i++){
+    if(i > 0)
+      _result += _path_separator;
+      
+    _result += _result_data[i];
+  }
 
   return _result;
 }
 
 
 std::string DirectoryUtil::strip_path(const std::string& path){
-  return path.substr(path.find_last_of(_path_seperator_filter, path.size()) + 1);
+  return path.substr(path.find_last_of(_path_separator_filter, path.size()) + 1);
 }
 
 std::string DirectoryUtil::strip_filename(const std::string& path){
-  return path.substr(0, path.find_last_of(_path_seperator_filter));
+  return path.substr(0, path.find_last_of(_path_separator_filter));
+}
+
+std::string DirectoryUtil::strip_extension(const std::string& path){
+  return path.substr(path.find_last_of(_extension_separator_filter));
 }

@@ -15,6 +15,7 @@ using namespace godot;
 #define BUTTON_CLOSING_NODE_NAME "ButtonClose"
 #define BUTTON_RUNNING_NODE_NAME "ButtonRun"
 #define BUTTON_REFRESH_NODE_NAME "ButtonRefresh"
+#define BUTTON_SAVE_NODE_NAME "ButtonSave"
 
 
 const char* CodeContextMenu::s_button_pressed = "button_pressed";
@@ -25,6 +26,7 @@ void CodeContextMenu::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_closing_button_pressed"), &CodeContextMenu::_closing_button_pressed);
   ClassDB::bind_method(D_METHOD("_running_button_pressed"), &CodeContextMenu::_running_button_pressed);
   ClassDB::bind_method(D_METHOD("_refresh_button_pressed"), &CodeContextMenu::_refresh_button_pressed);
+  ClassDB::bind_method(D_METHOD("_save_button_pressed"), &CodeContextMenu::_save_button_pressed);
 
   ClassDB::bind_method(D_METHOD("get_button_container_path"), &CodeContextMenu::get_button_container_path);
   ClassDB::bind_method(D_METHOD("set_button_container_path", "path"), &CodeContextMenu::set_button_container_path);
@@ -60,6 +62,10 @@ void CodeContextMenu::_refresh_button_pressed(){
   emit_signal(s_button_pressed, Variant(be_refresh));
 }
 
+void CodeContextMenu::_save_button_pressed(){
+  emit_signal(s_button_pressed, Variant(be_save));
+}
+
 
 void CodeContextMenu::_iterate_button(button_enum type, _iterate_button_cb cb, void* data){
   for(int i = 1; i <= be_allbutton; i = i << 1){
@@ -70,6 +76,7 @@ void CodeContextMenu::_iterate_button(button_enum type, _iterate_button_cb cb, v
       break; case be_closing: _button = _closing_button;
       break; case be_running: _button = _running_button;
       break; case be_refresh: _button = _refresh_button;
+      break; case be_save: _button = _save_button;
     }
 
     if(!_button)
@@ -108,11 +115,13 @@ void CodeContextMenu::_ready(){
   FETCH_BUTTON(_closing_button, BUTTON_CLOSING_NODE_NAME)
   FETCH_BUTTON(_running_button, BUTTON_RUNNING_NODE_NAME)
   FETCH_BUTTON(_refresh_button, BUTTON_REFRESH_NODE_NAME)
+  FETCH_BUTTON(_save_button, BUTTON_SAVE_NODE_NAME)
 
   _opening_button->connect("pressed", Callable(this, "_opening_button_pressed"));
   _closing_button->connect("pressed", Callable(this, "_closing_button_pressed"));
   _running_button->connect("pressed", Callable(this, "_running_button_pressed"));
   _refresh_button->connect("pressed", Callable(this, "_refresh_button_pressed"));
+  _save_button->connect("pressed", Callable(this, "_save_button_pressed"));
 
   _initialized = true;
 

@@ -11,6 +11,7 @@ namespace DirectoryUtil{
 
   std::string strip_path(const std::string& path);
   std::string strip_filename(const std::string& path);
+  std::string strip_extension(const std::string& path);
 }
 
 #endif

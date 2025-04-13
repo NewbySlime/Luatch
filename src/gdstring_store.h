@@ -14,6 +14,7 @@ class gd_string_store: public I_string_store{
 
     godot::String data;
 
+    void clear() override;
     void append(const char* data) override;
     void append(const char* data, std::size_t length) override;
 };

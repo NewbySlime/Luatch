@@ -173,7 +173,7 @@ void PopupVariableSetter::_reset_enum_button_config(){
     {setter_mode_string, "String"},
     {setter_mode_number, "Number"},
     {setter_mode_bool, "Boolean"},
-    {setter_mode_add_table, "Add New Table"},
+    {setter_mode_add_table, "Create New Table"},
     {setter_mode_reference_list, "From Reference"}
   };
 

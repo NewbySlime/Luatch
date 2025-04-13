@@ -37,10 +37,10 @@ Color gdutils::construct_color(uint32_t hex){
 
 Color gdutils::construct_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a){
   Color _result;
-    _result.r = r;
-    _result.g = g;
-    _result.b = b;
-    _result.a = a;
+    _result.r = (float)r/255;
+    _result.g = (float)g/255;
+    _result.b = (float)b/255;
+    _result.a = (float)a/255;
 
   return _result;
 }

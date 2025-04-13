@@ -1,7 +1,10 @@
 #include "defines.h"
 
 #include "custom_variant.h"
+#include "code_window.h"
 #include "error_trigger.h"
+#include "file_util.h"
+#include "gdstring_store.h"
 #include "gdutils.h"
 #include "gdvariant_util.h"
 #include "logger.h"
@@ -14,6 +17,12 @@
 #include "godot_cpp/classes/scene_tree.hpp"
 
 #include "Lua-CPPAPI/Src/luaapi_core.h"
+#include "Lua-CPPAPI/Src/luaapi_execution.h"
+#include "Lua-CPPAPI/Src/luaapi_stack.h"
+#include "Lua-CPPAPI/Src/luaapi_state.h"
+#include "Lua-CPPAPI/Src/luaapi_util.h"
+#include "Lua-CPPAPI/Src/luaapi_value.h"
+#include "Lua-CPPAPI/Src/luaapi_variant_util.h"
 #include "Lua-CPPAPI/Src/luadebug_variable_watcher.h"
 
 #include "algorithm"
@@ -21,6 +30,7 @@
 // TODO copy should instantly copy the data
 // TODO feature to rename the key
 
+using namespace FileUtil;
 using namespace gdutils;
 using namespace godot;
 using namespace lua;
@@ -31,6 +41,8 @@ using namespace lua::util;
 
 
 const char* LuaVariableTree::s_on_reference_changed = "reference_changed";
+
+static const char* _edited_function_name = "__MODIFIED_FUNCTION_TMP__";
 
 
 struct _setter_usage_pass_data{
@@ -51,6 +63,7 @@ void LuaVariableTree::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_setter_cancelled"), &LuaVariableTree::_on_setter_cancelled);
   ClassDB::bind_method(D_METHOD("_on_setter_applied_add_table_confirmed_variant"), &LuaVariableTree::_on_setter_applied_add_table_confirmed_variant);
   ClassDB::bind_method(D_METHOD("_on_setter_applied_add_table_cancelled_variant"), &LuaVariableTree::_on_setter_applied_add_table_cancelled_variant);
+  ClassDB::bind_method(D_METHOD("_on_file_closed", "file_path", "code_window_node"), &LuaVariableTree::_on_file_closed);
   ClassDB::bind_method(D_METHOD("_on_tree_button_clicked", "tree", "column", "id", "mouse_btn"), &LuaVariableTree::_on_tree_button_clicked);
   ClassDB::bind_method(D_METHOD("_on_reference_data_changed", "data"), &LuaVariableTree::_on_reference_data_changed);
   ClassDB::bind_method(D_METHOD("_on_context_menu_clicked", "id"), &LuaVariableTree::_on_context_menu_clicked);
@@ -311,6 +324,71 @@ void LuaVariableTree::_on_setter_applied_edit(TreeItem* current_item, I_variant*
 }
 
 
+void LuaVariableTree::_on_file_closed(const String& file_path, Node* node){
+  _on_file_closed_signal_lifetime.remove(node->get_instance_id());
+
+  _path_data* _data = _file_path_node.get_node_data(GDSTR_TO_STDSTR(file_path));
+  if(_data->flag & path_flag_edit_function){
+{ // enclosure for using gotos
+    auto _iter = _vartree_map.find(_data->item_id);
+    if(_iter == _vartree_map.end())
+      goto skip_edit_function_flag_checking;
+
+    if(_iter->second->this_value->get_type() != function_var::get_static_lua_type()){
+      GameUtils::Logger::print_err_static("[LuaVariableTree] Function edit target variable is not a function.");
+      goto skip_edit_function_flag_checking;
+    }
+
+    std::string _file_path_str = GDSTR_TO_STDSTR(file_path);
+
+    const lua::api::compilation_context* _cc = _lua_lib_data->get_function_data()->get_cc();
+    lua::api::core _lc = _cc->api_util->require_general_usage_core();
+    int _success = _lc.context->api_state->loadfile(_lc.istate, _file_path_str.c_str(), "bt");
+
+    if(_success != LUA_OK){
+      I_variant* _errdata = _lc.context->api_varutil->to_variant(_lc.istate, -1);
+      gd_string_store _gdstr; _errdata->to_string(&_gdstr);
+      GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Edited function cannot be parsed to Lua. Reason: {0}", _gdstr.data));
+
+      _lc.context->api_varutil->delete_variant(_errdata);
+      _lc.context->api_stack->pop(_lc.istate, 1);
+
+      goto skip_edit_function_flag_checking;
+    }
+
+    // TODO BUG: this function can reuse the last edited function
+    _lc.context->api_execution->call(_lc.istate, 0, 0);
+    
+    int _type = _lc.context->api_value->getglobal(_lc.istate, _edited_function_name);
+    if(_type == LUA_TNIL){
+      GameUtils::Logger::print_err_static("[LuaVariableTree] Edited function cannot be found. Did the function name changed?");
+      _lc.context->api_stack->pop(_lc.istate, 1);
+
+      goto skip_edit_function_flag_checking;
+    }
+
+    I_variant* _var = _lc.context->api_varutil->to_variant(_lc.istate, -1);
+    if(_var->get_type() != function_var::get_static_lua_type()){
+      gd_string_store _str; _var->to_string(&_str);
+      GameUtils::Logger::print_err_static("[LuaVariableTree] Edited function is not a type of function?");
+      _lc.context->api_stack->pop(_lc.istate, 1);
+
+      goto skip_edit_function_flag_checking;
+    }
+
+    TreeItem* _current_item = _iter->second->this_item;
+    _set_tree_item_value(_current_item, dynamic_cast<I_function_var*>(_var));
+    _update_tree_item(_current_item, NULL);
+
+    _lc.context->api_varutil->delete_variant(_var);
+    _lc.context->api_stack->pop(_lc.istate, 1);
+} // enclosure closing
+
+    skip_edit_function_flag_checking:{}
+  }
+}
+
+
 void LuaVariableTree::_on_tree_button_clicked(TreeItem* item, int column, int id, int mouse_button){
   _last_selected_item = item;
   _last_selected_id = item->get_instance_id();
@@ -358,6 +436,47 @@ void LuaVariableTree::_on_context_menu_clicked(int id){
       _remove_tree_item(_last_selected_item);
       _last_selected_item = NULL;
       _last_selected_id = 0;
+
+    break; case context_menu_edit_function:{
+      auto _iter = _vartree_map.find(_last_selected_id);
+      if(_iter == _vartree_map.end())
+        break;
+
+      if(_iter->second->this_value->get_type() != I_function_var::get_static_lua_type())
+        break;
+
+      I_function_var* _fvar = dynamic_cast<I_function_var*>(_iter->second->this_value);
+      const I_function_debug_info* _debug_info = _fvar->get_debug_info();
+      if(!_debug_info)
+        break;
+
+      std::string _path = _create_temporary_file_function(_debug_info);
+      _path_data _data;
+        _data.flag = path_flag_edit_function;
+        _data.item_id = _last_selected_id;
+      _file_path_node.create_node(_path, &_data);
+
+      NodePath _active_code_window_path = _gvariables->get_global_value("active_code_window");
+      CodeWindow* _active_code_window = get_node<CodeWindow>(_active_code_window_path);
+      if(!_active_code_window){
+        GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get currently active CodeWindow.");
+        break;
+      }
+
+      _active_code_window->open_code_context(_path, CodeWindow::open_flag_allow_editing | CodeWindow::open_flag_save_at_quit);
+      uint64_t _co_key = _active_code_window->get_instance_id();
+      std::shared_ptr<ConnectionLifetime> _co_value = std::make_shared<ConnectionLifetime>(
+        Signal(_active_code_window, CodeWindow::s_file_closed),
+        Callable(this, "_on_file_closed").bind(_active_code_window)
+      );
+
+      if(_on_file_closed_signal_lifetime.is_key_exists(_co_key))
+        _co_value->set_invalid(true);
+      else
+        _co_value->get_current_signal().connect(_co_value->get_current_callable());
+
+      _on_file_closed_signal_lifetime.insert(_co_key, _co_value);
+    }
 
     break; default:
       this->_check_custom_context(id);
@@ -434,6 +553,66 @@ bool LuaVariableTree::_is_local_table_not_full(const I_local_table_var* ltvar){
   }
 
   return _res;
+}
+
+
+// TODO add a way to remove temporary files at exit
+std::string LuaVariableTree::_create_temporary_file_function(const I_function_debug_info* debug_info){
+  std::string _result_path;
+
+  Ref<FileAccess> _source_file;
+  Ref<FileAccess> _target_file;
+
+{ // enclosure for using gotos
+  string_store _str; debug_info->get_file_path(&_str);
+  _source_file = FileAccess::open(_str.data.c_str(), FileAccess::READ);
+  if(_source_file.is_null()){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Cannot open source file '{0}'. Error code: {1}", _str.data.c_str(), FileAccess::get_open_error()));
+    goto skip_to_return;
+  }
+
+  String _base_path = _gvariables->get_global_value(GlobalVariables::key_temporary_base_path);
+  std::string _temp_path = create_temporary_file_path(GDSTR_TO_STDSTR(_base_path), ".lua");
+  _target_file = FileAccess::open(_temp_path.c_str(), FileAccess::WRITE);
+  if(_target_file.is_null()){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Cannot open temporary file '{0}'. Error code: {1}", _temp_path.c_str(), FileAccess::get_open_error()));
+    goto skip_to_return;
+  }
+
+  _result_path = _temp_path;
+
+  String _param_list;
+  for(int i = 0; i < debug_info->get_parameter_name_count(); i++){
+    if(!_param_list.is_empty())
+      _param_list += ", ";
+
+    gd_string_store _str; debug_info->get_parameter_name(i, &_str);
+    _param_list += _str.data; 
+  }
+
+  _target_file->store_string("-- Do not replace or edit the function name, doing so might not be recognizeable as the edited function.\n\n");
+  _target_file->store_string(gd_format_str("function {0}({1})\n", _edited_function_name, _param_list));
+
+  for(int i = 1; i < debug_info->get_last_line_defined(); i++){
+    String _line_str = _source_file->get_line();
+    if(i <= debug_info->get_line_defined())
+      continue;
+
+    _target_file->store_string(_line_str + "\n");
+  }
+
+  _target_file->store_string("end\n");
+} // enclosure closing
+  
+  skip_to_return:{}
+
+  if(!_source_file.is_null())
+    _source_file->close();
+
+  if(!_target_file.is_null())
+    _target_file->close();
+
+  return _result_path;
 }
 
 
@@ -1141,7 +1320,7 @@ void LuaVariableTree::_open_context_menu(){
       break; case I_table_var::get_static_lua_type():{
           _tmp_part = PopupContextMenu::MenuData::Part();
           _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
-          _tmp_part.label = gd_format_str("Add Table Variable");
+          _tmp_part.label = "Add Table Variable";
           _tmp_part.id = context_menu_add_table;
         _data.part_list.insert(_data.part_list.end(), _tmp_part);
       }
@@ -1154,10 +1333,22 @@ void LuaVariableTree::_open_context_menu(){
 
           _tmp_part = PopupContextMenu::MenuData::Part();
           _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
-          _tmp_part.label = gd_format_str("Add Local Variable");
+          _tmp_part.label = "Add Local Variable";
           _tmp_part.id = context_menu_add_table;
           _tmp_part.is_disabled = !_local_table_empty;
           _tmp_part.tooltip_text = _local_variable_space_exists? "": "No empty local variables to add.";
+        _data.part_list.insert(_data.part_list.end(), _tmp_part);
+      }
+
+      break; case I_function_var::get_static_lua_type():{
+        I_function_var* _func_var = dynamic_cast<I_function_var*>(_iter->second->this_value);
+
+          _tmp_part = PopupContextMenu::MenuData::Part();
+          _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
+          _tmp_part.label = "Edit Function";
+          _tmp_part.id = context_menu_edit_function;
+          _tmp_part.is_disabled = !_func_var->is_luafunction();
+          _tmp_part.tooltip_text = !_func_var->is_luafunction()? "Target variable is not a Lua function.": "";
         _data.part_list.insert(_data.part_list.end(), _tmp_part);
       }
     }
@@ -1335,7 +1526,7 @@ void LuaVariableTree::_ready(){
 { // enclosure for using gotos
   _variable_tree = get_node<Tree>(_variable_tree_path);
   if(!_variable_tree){
-    GameUtils::Logger::print_err_static("[VariableWatcher] Cannot get Tree for Variable Inspector.");
+    GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get Tree for Variable Inspector.");
 
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
@@ -1343,7 +1534,15 @@ void LuaVariableTree::_ready(){
   
   _gvariables = get_node<GlobalVariables>(GlobalVariables::singleton_path);
   if(!_gvariables){
-    GameUtils::Logger::print_err_static("[VariableWatcher] Cannot get GlobalVariables.");
+    GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get GlobalVariables.");
+
+    _quit_code = ERR_UNCONFIGURED;
+    goto on_error_label;
+  }
+
+  LibLuaHandle* _lib_handle = get_node<LibLuaHandle>("/root/GlobalLibLuaHandle");
+  if(!_lib_handle){
+    GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get Global Lua Library Handle object.");
 
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
@@ -1363,6 +1562,8 @@ void LuaVariableTree::_ready(){
   _global_confirmation_dialog = get_node<ConfirmationDialog>(_confirmation_dialog_path);
   if(!_global_confirmation_dialog)
     return;
+
+  _lua_lib_data = _lib_handle->get_library_store();
 
   _variable_tree->connect("button_clicked", Callable(this, "_on_tree_button_clicked"));
   _variable_tree->connect("item_collapsed", Callable(this, "_item_collapsed_safe"));

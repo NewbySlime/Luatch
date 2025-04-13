@@ -5,12 +5,15 @@
 #include "code_context_menu.h"
 #include "console_window.h"
 #include "luaprogram_handle.h"
+#include "path_node.h"
 
 #include "godot_cpp/classes/packed_scene.hpp"
 #include "godot_cpp/classes/tab_container.hpp"
 #include "godot_cpp/variant/node_path.hpp"
 
 
+// TODO store code context menu and then pass the code context when opening a file
+// TODO code context menu button visibility is based on what the current code context is
 class CodeWindow: public godot::TabContainer{
   GDCLASS(CodeWindow, godot::TabContainer)
 
@@ -21,6 +24,9 @@ class CodeWindow: public godot::TabContainer{
     // Param:
     //  - STRING: file_path
     static const char* s_file_closed;
+    // Param:
+    //  - STRING: file_path
+    static const char* s_file_closing;
     static const char* s_focus_switched;
     // Param:
     //  - STRING: file_path
@@ -38,18 +44,19 @@ class CodeWindow: public godot::TabContainer{
     //  - INT: error_code
     static const char* s_code_cannot_open;
 
+    enum open_flag{
+      open_flag_save_at_quit = 0b01,
+      open_flag_allow_editing = 0b10
+    };
+
   private:
-    struct _path_node{
-      public:
-        std::string _path_name;
+    struct _node_data{
+      CodeContext* _code_node = NULL;
+    };
 
-        std::map<std::string, _path_node*> _branches;
-
-        // if NULL, then this is a directory
-        CodeContext* _code_node = NULL;
-
-        // if NULL, then it is the top most
-        _path_node* _parent = NULL;
+    struct _context_data{
+      CodeContext* this_obj;
+      int open_flag;
     };
 
     godot::String _code_context_scene_path;
@@ -60,21 +67,20 @@ class CodeWindow: public godot::TabContainer{
 
     LuaProgramHandle* _program_handle;
 
-    _path_node* _path_code_root;
-    std::map<uint64_t, CodeContext*> _context_map;
+    TPathNode<_node_data> _path_code_node;
+    std::map<uint64_t, _context_data> _context_map;
 
     std::string _initial_prompt_path;
 
     bool _initialized = false;
     bool _context_menu_node_init = false;
 
-
-    void _recursive_delete(_path_node* node);
-
-    void _on_file_loaded(godot::String file_path);
+    void _on_file_loaded(const godot::String& file_path, godot::Node* node);
     void _on_breakpoint_added(int line, uint64_t id);
     void _on_breakpoint_removed(int line, uint64_t id);
-    void _on_file_cannot_open(godot::String file_path, int error_code);
+    void _on_file_cannot_open(const godot::String& file_path, int error_code);
+
+    void _on_code_context_exiting(godot::Node* node);
 
     void _on_files_dropped(const godot::PackedStringArray& file_list);
 
@@ -86,14 +92,6 @@ class CodeWindow: public godot::TabContainer{
 
     void _update_context_button_visibility();
 
-    // if returns NULL, not found
-    _path_node* _get_path_node(const std::string& file_path);
-
-    // This only handle creating node, CodeContext excluded
-    _path_node* _create_path_node(const std::string& file_path);
-    // This only handle deleting node, CodeContext excluded
-    bool _delete_path_node(const std::string& file_path);
-
     void _on_code_context_menu_ready(CodeContextMenu* obj);
     void _on_code_context_menu_ready_event(godot::Object* obj);
 
@@ -103,9 +101,6 @@ class CodeWindow: public godot::TabContainer{
     static void _bind_methods();
 
   public:
-    CodeWindow();
-    ~CodeWindow();
-
     void _ready() override;
 
     void change_focus_code_context(const std::string& file_path);
@@ -115,7 +110,7 @@ class CodeWindow: public godot::TabContainer{
 
     void open_code_context();
     // for the result of the function, listen to s_code_opened or s_code_cannot_open
-    void open_code_context(const std::string& file_path);
+    void open_code_context(const std::string& file_path, int flags = 0);
 
     bool close_current_code_context();
     bool close_code_context(const std::string& file_path);

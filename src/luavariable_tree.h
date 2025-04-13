@@ -1,8 +1,12 @@
 #ifndef LUAVARIABLE_TREE_HEADER
 #define LUAVARIABLE_TREE_HEADER
 
+#include "connection_lifetime.h"
+#include "counted_ownership.h"
 #include "custom_variant.h"
 #include "global_variables.h"
+#include "liblua_handle.h"
+#include "path_node.h"
 #include "popup_context_menu.h"
 #include "popup_variable_setter.h"
 #include "reference_query_menu.h"
@@ -36,11 +40,12 @@ class LuaVariableTree: public godot::Tree{
     };
 
     enum _context_menu_id_enum{
-      context_menu_edit       = 0x1,
-      context_menu_add        = 0x2,
-      context_menu_add_table  = 0x3,
-      context_menu_copy       = 0x4,
-      context_menu_remove     = 0x5,
+      context_menu_edit           = 0x1,
+      context_menu_add            = 0x2,
+      context_menu_add_table      = 0x3,
+      context_menu_copy           = 0x4,
+      context_menu_remove         = 0x5,
+      context_menu_edit_function  = 0x6
       // To add more custom enum, preferably to use more than 0x10000
     };
 
@@ -73,7 +78,22 @@ class LuaVariableTree: public godot::Tree{
     };
 
   private:
+    enum _path_flag{
+      path_flag_edit_function = 0b1
+    };
+
+    struct _path_data{
+      uint32_t flag;
+      uint64_t item_id;
+    };
+
+    TPathNode<_path_data> _file_path_node;
+    CountedOwnership<uint64_t, std::shared_ptr<ConnectionLifetime>> _on_file_closed_signal_lifetime;
+
     bool _is_using_variable_setter = false;
+
+    std::shared_ptr<LibLuaStore> _lua_lib_data;
+
 
     void _item_collapsed_safe(godot::TreeItem* item);
     void _item_collapsed(uint64_t id);
@@ -93,6 +113,8 @@ class LuaVariableTree: public godot::Tree{
     void _on_setter_applied_add_table_cancelled_variant(const godot::Variant& data);
     void _on_setter_applied_add_table_confirmed(_variable_tree_item_metadata* _metadata, lua::I_variant* key, lua::I_variant* value);
     void _on_setter_applied_edit(godot::TreeItem* current_item, lua::I_variant* value);
+
+    void _on_file_closed(const godot::String& file_path, godot::Node* code_window);
     
     void _on_tree_button_clicked(godot::TreeItem* item, int column, int id, int mouse_button);
 
@@ -107,6 +129,9 @@ class LuaVariableTree: public godot::Tree{
     void _clear_reference_lookup_list();
 
     bool _is_local_table_not_full(const I_local_table_var* ltvar);
+
+    // Returns the temporary file path.
+    std::string _create_temporary_file_function(const lua::debug::I_function_debug_info* debug_info);
 
   protected:
     struct _reference_lookup_data{

@@ -1,4 +1,6 @@
+#include "defines.h"
 #include "error_trigger.h"
+#include "file_util.h"
 #include "global_variables.h"
 #include "logger.h"
 #include "popup_context_menu.h"
@@ -6,6 +8,7 @@
 #include "strutil.h"
 
 #include "godot_cpp/classes/confirmation_dialog.hpp"
+#include "godot_cpp/classes/dir_access.hpp"
 #include "godot_cpp/classes/engine.hpp"
 #include "godot_cpp/classes/packed_scene.hpp"
 #include "godot_cpp/classes/popup_menu.hpp"
@@ -13,6 +16,7 @@
 #include "godot_cpp/classes/timer.hpp"
 
 using namespace ErrorTrigger;
+using namespace FileUtil;
 using namespace gdutils;
 using namespace godot;
 
@@ -25,6 +29,7 @@ const char* GlobalVariables::key_context_menu_path = "global_context_menu_path";
 const char* GlobalVariables::key_popup_variable_setter_path = "global_popup_variable_setter_path";
 const char* GlobalVariables::key_confirmation_dialog_path = "global_confirmation_dialog_path";
 const char* GlobalVariables::key_timer_scene = "timer_scene";
+const char* GlobalVariables::key_temporary_base_path = "temporary_base_path";
 
 
 void GlobalVariables::_bind_methods(){
@@ -39,7 +44,7 @@ void GlobalVariables::_bind_methods(){
 
 void GlobalVariables::_check_variable_data(bool as_warning){
   bool _failed = false;
-  void(*log_func)(const String&) = as_warning? GameUtils::Logger::print_warn_static: GameUtils::Logger::print_err_static; 
+  void(*log_func)(const String&) = as_warning? GameUtils::Logger::print_warn_static: GameUtils::Logger::print_err_static;
 
 { // enclosure for scoping
   NodePath _test_path = get_global_value(key_popup_variable_setter_path);
@@ -87,6 +92,19 @@ void GlobalVariables::_check_variable_data(bool as_warning){
   }
 
   _test_node->queue_free();
+} // enclosure closing
+
+{ // enclosure for scoping
+  String _base_path = get_global_value(key_temporary_base_path);
+  String _temporary_path = String(get_temporary_base_folder().c_str()) + _base_path;
+  if(!DirAccess::dir_exists_absolute(_temporary_path)){
+    godot::Error _success = DirAccess::make_dir_recursive_absolute(_temporary_path);
+    if(_success != godot::OK){
+      log_func(gd_format_str("[GlobalVariables] Cannot create temporary file. Error code: {0}", _success));
+      _failed = true;
+      goto skip_checking;
+    }
+  }
 } // enclosure closing
 
   skip_checking:{}

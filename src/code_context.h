@@ -20,6 +20,13 @@ class CodeContext: public godot::Control{
     //  - INT: error_code
     static const char* s_cannot_load;
     // Param:
+    //  - STRING: file_path
+    static const char* s_file_saved;
+    // Param:
+    // - STRING: file_path
+    // - INT: error_code
+    static const char* s_cannot_save;
+    // Param:
     //  - INT: idx
     //  - INT: obj_id
     static const char* s_breakpoint_added;
@@ -29,7 +36,7 @@ class CodeContext: public godot::Control{
     static const char* s_breakpoint_removed;
 
     enum config_flag{
-      config_flag_allow_code_writing
+      config_flag_allow_code_writing = 0b1
     };
 
   private:
@@ -40,6 +47,8 @@ class CodeContext: public godot::Control{
 
     bool _initialized = false;
     bool _skip_breakpoint_toggled_event = false;
+
+    int _current_config = 0;
 
     std::vector<int> _breakpointed_list;
 
@@ -71,8 +80,9 @@ class CodeContext: public godot::Control{
     void reload_file();
     std::string get_current_file_path() const;
 
+    // For safety measures, the config will be reset after loading another new file.
     void set_config_flag(int flag);
-    int get_config_flag();
+    int get_config_flag() const;
 
     godot::String get_line_at(int line) const;
     int get_line_count() const;
@@ -94,6 +104,7 @@ class CodeContext: public godot::Control{
     godot::NodePath get_code_edit_path() const;
 
     bool is_initialized() const;
+    bool is_editable() const;
 };
 
 #endif

@@ -24,13 +24,15 @@ template<typename... T_args> std::string format_str(const char* str, T_args... a
 #include "godot_cpp/variant/array.hpp"
 #include "godot_cpp/variant/string.hpp"
 
+godot::String gd_format_strv(const char* str, const godot::Variant& array);
+
 template<typename... T_args> godot::String gd_format_str(const char* str, T_args... args){
   godot::Array _paramarr;
   ([&]{
     _paramarr.append(args);
   }(), ...);
 
-  return godot::String(str).format(_paramarr);
+  return gd_format_strv(str, _paramarr);
 }
 
 #endif
