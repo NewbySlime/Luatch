@@ -59,6 +59,9 @@ namespace GameUtils{
       static void print_log_static(const godot::String &log);
       static void print_warn_static(const godot::String &warning);
       static void print_err_static(const godot::String &err);
+      static void print_log_static_std(const std::string& log);
+      static void print_warn_static_std(const std::string& warning);
+      static void print_err_static_std(const std::string& err);
 
       void print_log(const godot::String &log);
       void print_warn(const godot::String &warning);

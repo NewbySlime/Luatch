@@ -86,7 +86,6 @@ class LuaProgramHandle: public godot::Node{
     godot::String _output_reading_buffer;
 
     godot::Ref<godot::SceneTreeTimer> _stop_warn_timer = NULL;
-    // TODO expose to editor
     float _stop_warn_time = 3;
 
     std::string _current_file_path;
@@ -169,6 +168,9 @@ class LuaProgramHandle: public godot::Node{
     lua::debug::I_execution_flow* get_execution_flow() const;
     // Returns NULL if not yet running.
     lua::debug::I_variable_watcher* get_variable_watcher() const;
+
+    void set_stopping_warn_timer(float time);
+    float get_stopping_warn_timer() const;
 };
 
 #endif

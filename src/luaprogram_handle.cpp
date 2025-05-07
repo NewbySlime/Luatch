@@ -44,6 +44,11 @@ void LuaProgramHandle::_bind_methods(){
 
   ClassDB::bind_method(D_METHOD("append_input", "data"), &LuaProgramHandle::append_input);
 
+  ClassDB::bind_method(D_METHOD("set_stopping_warn_timer", "time"), &LuaProgramHandle::set_stopping_warn_timer);
+  ClassDB::bind_method(D_METHOD("get_stopping_warn_timer"), &LuaProgramHandle::get_stopping_warn_timer);
+
+  ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "stopping_warn_timer"), "set_stopping_warn_timer", "get_stopping_warn_timer");
+
   ADD_SIGNAL(MethodInfo(s_thread_starting));
   ADD_SIGNAL(MethodInfo(s_starting));
   ADD_SIGNAL(MethodInfo(s_stopping));
@@ -806,4 +811,13 @@ lua::debug::I_execution_flow* LuaProgramHandle::get_execution_flow() const{
 
 lua::debug::I_variable_watcher* LuaProgramHandle::get_variable_watcher() const{
   return _variable_watcher;
+}
+
+
+void LuaProgramHandle::set_stopping_warn_timer(float time){
+  _stop_warn_time = time;
+}
+
+float LuaProgramHandle::get_stopping_warn_timer() const{
+  return _stop_warn_time;
 }

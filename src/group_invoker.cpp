@@ -42,7 +42,8 @@ void GroupInvoker::_recursive_call(Node* node, const String& func_name, const Ar
   int _child_count = node->get_child_count();
   for(int i = 0; i < _child_count; i++){
     Node* _child_node = node->get_child(i);
-    _child_node->callv(func_name, parameter);
+    if(_child_node->has_method(func_name))
+      _child_node->callv(func_name, parameter);
     
     _recursive_call(_child_node, func_name, parameter);
   }

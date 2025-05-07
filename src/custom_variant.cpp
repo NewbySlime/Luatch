@@ -264,6 +264,9 @@ void local_table_var::set_value(const I_variant* key, const I_variant* value){
   _lc.context->api_thread->unlock_state(_lc.istate);
 }
 
+void local_table_var::rename_value(const I_variant* key, const I_variant* to_key){
+  // This function is not suitable for local table.
+}
 
 bool local_table_var::remove_value(const I_variant* key){
   bool _res = false;

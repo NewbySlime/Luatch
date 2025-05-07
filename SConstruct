@@ -24,7 +24,8 @@ env = SConscript(godotcpp_path+"/SConstruct")
 # tweak this if you want to use different folders, or more folders, to store your source code in.
 source_list = [
     source_path+"/",
-    source_path+"/property_modifier/"
+    source_path+"/property_modifier/",
+    source_path+"/testing_classes/"
 ]
 
 compiled_file_ext = "*.cpp"
@@ -37,6 +38,11 @@ for v in source_list:
 if env["target"] == "template_debug":
     env.Append(CXXFLAGS=["/Z7", "/FS"])
     env.Append(LINKFLAGS=["/DEBUG", cpplua_staticlib_path, "Advapi32.lib"])
+    env["debug_symbols"] = "yes"
+    env["optimize"] = "debug"
+    env["use_asan"] = "yes"
+    env["use_lsan"] = "yes"
+    env["use_msan"] = "yes"
 else:
     env.Append(LINKFLAGS=[cpplua_staticlib_path, "Advapi32.lib"])
 

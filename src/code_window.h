@@ -12,8 +12,6 @@
 #include "godot_cpp/variant/node_path.hpp"
 
 
-// TODO store code context menu and then pass the code context when opening a file
-// TODO code context menu button visibility is based on what the current code context is
 class CodeWindow: public godot::TabContainer{
   GDCLASS(CodeWindow, godot::TabContainer)
 

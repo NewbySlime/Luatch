@@ -11,11 +11,13 @@ using namespace ErrorTrigger;
 using namespace godot;
 
 
+// TODO
+//  [ ] Add minimal_window_size property for restricting the size.
 void WindowUpdater::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_data_loaded"), &WindowUpdater::_on_data_loaded);
   ClassDB::bind_method(D_METHOD("_on_window_size_changed", "window_node"), &WindowUpdater::_on_window_size_changed);
 
-  ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "minimal_window_size"), "set_minimal_window_size", "get_minimal_window_size");
+  // ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "minimal_window_size"), "set_minimal_window_size", "get_minimal_window_size");
 }
 
 

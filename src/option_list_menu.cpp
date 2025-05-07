@@ -1,12 +1,17 @@
 #include "common_event.h"
+#include "error_trigger.h"
+#include "gdutils.h"
 #include "logger.h"
 #include "option_list_menu.h"
 #include "option_value_control.h"
 #include "strutil.h"
 
 #include "godot_cpp/classes/engine.hpp"
+#include "godot_cpp/classes/scene_tree.hpp"
 
 
+using namespace ErrorTrigger;
+using namespace gdutils;
 using namespace godot;
 
 
@@ -15,6 +20,11 @@ const char* OptionListMenu::s_value_set = "value_set";
 
 void OptionListMenu::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_option_changed", "obj", "value"), &OptionListMenu::_on_option_changed);
+
+  ClassDB::bind_method(D_METHOD("get_target_list_node"), &OptionListMenu::get_target_list_node);
+  ClassDB::bind_method(D_METHOD("set_target_list_node", "path"), &OptionListMenu::set_target_list_node);
+
+  ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_list_node"), "set_target_list_node", "get_target_list_node");
 
   ADD_SIGNAL(MethodInfo(SIGNAL_ON_READY, PropertyInfo(Variant::OBJECT, "node")));
   ADD_SIGNAL(MethodInfo(s_value_set, PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value")));
@@ -48,9 +58,39 @@ void OptionListMenu::_ready(){
   if(_engine->is_editor_hint())
     return;
 
-  _update_option_nodes(this);
+  int _quit_code;
+
+{ // enclosure for using gotos
+  _target_list_node = this;
+  if(!_target_list_node_path.is_empty()){
+    _target_list_node = get_node<Node>(_target_list_node_path);
+    if(!_target_list_node){
+      GameUtils::Logger::print_err_static("[OptionListMenu] Cannot get a target list node.");
+      _quit_code = ERR_UNCONFIGURED;
+      goto on_error;
+    }
+  }
+
+  _update_option_nodes(_target_list_node);
 
   emit_signal(SIGNAL_ON_READY, this);
+} // enclosure closing
+
+  return;
+  
+
+  on_error:{}
+  trigger_generic_error_message();
+  get_tree()->quit(_quit_code);
+}
+
+
+NodePath OptionListMenu::get_target_list_node() const{
+  return _target_list_node_path;
+}
+
+void OptionListMenu::set_target_list_node(const NodePath& path){
+  _target_list_node_path = path;
 }
 
 

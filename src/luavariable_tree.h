@@ -14,6 +14,7 @@
 #include "godot_cpp/classes/confirmation_dialog.hpp"
 #include "godot_cpp/classes/tree.hpp"
 
+#include "Lua-CPPAPI/Src/luaobject_util.h"
 #include "Lua-CPPAPI/Src/luavariant.h"
 
 #include "map"
@@ -28,11 +29,11 @@ class LuaVariableTree: public godot::Tree{
     // Param:
     //  - PACKED_BYTE_ARRAY: data of table_reference_data
     static const char* s_on_reference_changed;
-
+    
     struct reference_changed_data{
       const void* reference_address;
     };
-
+  
   protected:
     enum _button_id_enum{
       button_id_context_menu = 0x1
@@ -45,7 +46,8 @@ class LuaVariableTree: public godot::Tree{
       context_menu_add_table      = 0x3,
       context_menu_copy           = 0x4,
       context_menu_remove         = 0x5,
-      context_menu_edit_function  = 0x6
+      context_menu_edit_function  = 0x6,
+      context_menu_rename         = 0x7
       // To add more custom enum, preferably to use more than 0x10000
     };
 
@@ -87,6 +89,24 @@ class LuaVariableTree: public godot::Tree{
       uint64_t item_id;
     };
 
+    class _FilePathLifetime{
+      public:
+        typedef void(*on_deleted_function)(const godot::String& file_path);
+
+      private:
+        godot::String _file_path;
+        on_deleted_function _on_deleted_cb;
+
+        bool _is_invalid = false;
+
+      public:
+        _FilePathLifetime(const godot::String& path, on_deleted_function on_deleted_cb);
+        ~_FilePathLifetime();
+        
+        void flag_invalid(bool flag);
+    };
+
+
     TPathNode<_path_data> _file_path_node;
     CountedOwnership<uint64_t, std::shared_ptr<ConnectionLifetime>> _on_file_closed_signal_lifetime;
 
@@ -95,6 +115,10 @@ class LuaVariableTree: public godot::Tree{
     std::shared_ptr<LibLuaStore> _lua_lib_data;
 
 
+    static void _on_file_path_lifetime_deleted(const godot::String& file_path);
+
+    void _flag_file_path_to_temporary_deletion(const godot::String& file_path);
+
     void _item_collapsed_safe(godot::TreeItem* item);
     void _item_collapsed(uint64_t id);
     void _item_selected();
@@ -102,6 +126,11 @@ class LuaVariableTree: public godot::Tree{
     void _item_selected_mouse(const godot::Vector2 mouse_pos, int mouse_idx);
     void _item_empty_clicked(const godot::Vector2 mouse_pos, int mouse_idx);
     void _item_activated();
+
+    void _rename_tree_item_key(godot::TreeItem* item, const lua::I_variant* key);
+    void _rename_tree_item_key_cancel_gd(const godot::Variant& data);
+    void _rename_tree_item_key_accept_gd(const godot::Variant& data);
+    void _rename_tree_item_key_accept(godot::TreeItem* item, const lua::I_variant* key);
     
     void _variable_setter_do_popup_add_table_item(godot::TreeItem* parent_item, uint64_t flag = PopupVariableSetter::edit_add_value_edit);
     void _variable_setter_do_popup_add_table_item(godot::TreeItem* parent_item, godot::TreeItem* value_item, uint64_t flag = PopupVariableSetter::edit_add_value_edit);

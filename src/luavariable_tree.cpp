@@ -2,6 +2,7 @@
 
 #include "custom_variant.h"
 #include "code_window.h"
+#include "counted_object_lifetime_node.h"
 #include "error_trigger.h"
 #include "file_util.h"
 #include "gdstring_store.h"
@@ -10,9 +11,11 @@
 #include "logger.h"
 #include "luautil.h"
 #include "luavariable_tree.h"
+#include "object_lifetime.h"
 #include "signal_ownership.h"
 #include "strutil.h"
 
+#include "godot_cpp/classes/dir_access.hpp"
 #include "godot_cpp/classes/engine.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
 
@@ -27,8 +30,6 @@
 
 #include "algorithm"
 
-// TODO copy should instantly copy the data
-// TODO feature to rename the key
 
 using namespace FileUtil;
 using namespace gdutils;
@@ -36,18 +37,43 @@ using namespace godot;
 using namespace lua;
 using namespace lua::api;
 using namespace lua::debug;
+using namespace lua::object;
 using namespace lua::util;
-
-
-
-const char* LuaVariableTree::s_on_reference_changed = "reference_changed";
-
-static const char* _edited_function_name = "__MODIFIED_FUNCTION_TMP__";
 
 
 struct _setter_usage_pass_data{
   uint64_t parent_id;
 };
+
+static const char* _edited_function_name = "__MODIFIED_FUNCTION_TMP__";
+
+
+// MARK: LuaVariableTree::_FilePathLifetime definition
+
+LuaVariableTree::_FilePathLifetime::_FilePathLifetime(const String& path, on_deleted_function on_deleted_cb){
+  _file_path = path;
+  _on_deleted_cb = on_deleted_cb;
+}
+
+LuaVariableTree::_FilePathLifetime::~_FilePathLifetime(){
+  if(_is_invalid)
+    return;
+
+  _on_deleted_cb(_file_path);
+}
+
+
+void LuaVariableTree::_FilePathLifetime::flag_invalid(bool flag){
+  _is_invalid = flag;
+}
+
+
+
+
+
+// MARK: LuaVariableTree definition
+
+const char* LuaVariableTree::s_on_reference_changed = "reference_changed";
 
 
 void LuaVariableTree::_bind_methods(){
@@ -58,6 +84,9 @@ void LuaVariableTree::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_item_selected_mouse", "mouse_pos", "mouse_button_index"), &LuaVariableTree::_item_selected_mouse);
   ClassDB::bind_method(D_METHOD("_item_empty_clicked", "mouse_pos", "mouse_button_index"), &LuaVariableTree::_item_empty_clicked);
   ClassDB::bind_method(D_METHOD("_item_activated"), &LuaVariableTree::_item_activated);
+
+  ClassDB::bind_method(D_METHOD("_rename_tree_item_key_cancel_gd", "data"), &LuaVariableTree::_rename_tree_item_key_cancel_gd);
+  ClassDB::bind_method(D_METHOD("_rename_tree_item_key_accept_gd", "data"), &LuaVariableTree::_rename_tree_item_key_accept_gd);
 
   ClassDB::bind_method(D_METHOD("_on_setter_applied", "pass_data"), &LuaVariableTree::_on_setter_applied);
   ClassDB::bind_method(D_METHOD("_on_setter_cancelled"), &LuaVariableTree::_on_setter_cancelled);
@@ -87,6 +116,37 @@ LuaVariableTree::~LuaVariableTree(){
 
   _clear_variable_tree();
   _clear_reference_lookup_list();
+}
+
+
+void LuaVariableTree::_on_file_path_lifetime_deleted(const String& file_path){
+  godot::Error _success = DirAccess::remove_absolute(file_path);
+  if(_success != OK){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Cannot delete temporary file '{0}'. Error code: {1}", file_path, _success));
+  }
+}
+
+
+void LuaVariableTree::_flag_file_path_to_temporary_deletion(const String& file_path){
+  CountedObjectLifetimeNode* _counted_path_file_ref_node = get_node<CountedObjectLifetimeNode>("/root/GlobalCountedObjectLifetimeNode");
+  if(_counted_path_file_ref_node){
+{ // enclosure for using gotos
+    std::shared_ptr<_FilePathLifetime> _file_path_lifetime = std::make_shared<_FilePathLifetime>(file_path, _on_file_path_lifetime_deleted);
+    ObjectLifetime _file_path_object_lifetime(_file_path_lifetime);
+    
+    if(_counted_path_file_ref_node->get_value(file_path, ObjectLifetime()).is_valid_object()){
+      _file_path_lifetime->flag_invalid(true);
+      goto skip_adding_reference_to_file_path;
+    }
+
+    _counted_path_file_ref_node->insert(file_path, _file_path_object_lifetime);
+} // enclosure closing
+
+    skip_adding_reference_to_file_path:{}
+  }
+  else{
+    GameUtils::Logger::print_warn_static("[LuaVariableTree] Cannot get Object lifetime storage to set the lifetime of the temporary files.");
+  }
 }
 
 
@@ -193,6 +253,9 @@ void LuaVariableTree::_on_setter_applied(const Variant& pass_data){
 
     break; case context_menu_edit:
       _on_setter_applied_edit(_last_selected_item, _value_var);
+
+    break; case context_menu_rename:
+      _rename_tree_item_key(_last_selected_item, _key_var);
   }
 } // enclosure closing
 
@@ -250,10 +313,14 @@ void LuaVariableTree::_on_setter_applied_add_table(TreeItem* parent_item, I_vari
 void LuaVariableTree::_on_setter_applied_add_table_confirmed_variant(const Variant& data){
   _setter_applied_add_table_data _data = parse_variant_data<_setter_applied_add_table_data>(data);
   auto _iter = _vartree_map.find(_data.item_id);
+{ // enclosure for using gotos
   if(_iter == _vartree_map.end())
-    return;
+    goto skip_to_return;
   
   _on_setter_applied_add_table_confirmed(_iter->second, _data.key_var, _data.value_var);
+} // enclosure closing
+
+  skip_to_return:{}
   
   // delete _data values
   cpplua_delete_variant(_data.key_var);
@@ -356,7 +423,10 @@ void LuaVariableTree::_on_file_closed(const String& file_path, Node* node){
       goto skip_edit_function_flag_checking;
     }
 
-    // TODO BUG: this function can reuse the last edited function
+    // Remove the function value first
+    _lc.context->api_value->pushnil(_lc.istate);
+    _lc.context->api_value->setglobal(_lc.istate, _edited_function_name);
+
     _lc.context->api_execution->call(_lc.istate, 0, 0);
     
     int _type = _lc.context->api_value->getglobal(_lc.istate, _edited_function_name);
@@ -402,6 +472,9 @@ void LuaVariableTree::_on_tree_button_clicked(TreeItem* item, int column, int id
 }
 
 void LuaVariableTree::_on_context_menu_clicked(int id){
+  // TODO copy should instantly copy the data, instead of waiting for use input
+  // [ ] Find a way to determine what the resulting name of the copy
+  // [ ] What happens if there are two resulting name
   _last_context_id = id;
   switch(id){
     break; case context_menu_edit:{
@@ -456,6 +529,9 @@ void LuaVariableTree::_on_context_menu_clicked(int id){
         _data.item_id = _last_selected_id;
       _file_path_node.create_node(_path, &_data);
 
+      // Add file path reference to give lifetime definition to a temporary file.
+      _flag_file_path_to_temporary_deletion(_path.c_str());
+
       NodePath _active_code_window_path = _gvariables->get_global_value("active_code_window");
       CodeWindow* _active_code_window = get_node<CodeWindow>(_active_code_window_path);
       if(!_active_code_window){
@@ -476,6 +552,19 @@ void LuaVariableTree::_on_context_menu_clicked(int id){
         _co_value->get_current_signal().connect(_co_value->get_current_callable());
 
       _on_file_closed_signal_lifetime.insert(_co_key, _co_value);
+    }
+
+    break; case context_menu_rename:{
+      TreeItem* _parent_item = _last_selected_item->get_parent();
+      if(!_parent_item)
+        break;
+
+      uint64_t _edit_flag =
+        PopupVariableSetter::edit_add_key_edit | 
+        PopupVariableSetter::edit_clear_on_popup
+      ;
+
+      _variable_setter_do_popup_add_table_item(_parent_item, _edit_flag);
     }
 
     break; default:
@@ -556,7 +645,6 @@ bool LuaVariableTree::_is_local_table_not_full(const I_local_table_var* ltvar){
 }
 
 
-// TODO add a way to remove temporary files at exit
 std::string LuaVariableTree::_create_temporary_file_function(const I_function_debug_info* debug_info){
   std::string _result_path;
 
@@ -1116,6 +1204,120 @@ void LuaVariableTree::_bind_object(LuaVariableTree* obj){
 }
 
 
+struct _rename_applied_data{
+  godot::TreeItem* current_item = NULL;
+  I_variant* new_key = NULL;
+};
+
+void LuaVariableTree::_rename_tree_item_key(TreeItem* item, const I_variant* key){
+  auto _iter = _vartree_map.find(item->get_instance_id());
+  if(_iter == _vartree_map.end())
+    return;
+
+  // return if trying to rename to the same key.
+  if(comparison_variant(_iter->second->this_key) == key)
+    return;
+
+  TreeItem* _parent_item = item->get_parent();
+  if(!_parent_item)
+    return;
+
+  auto _parent_iter = _vartree_map.find(_parent_item->get_instance_id());
+  if(_parent_iter == _vartree_map.end())
+    return;
+
+  if(!_parent_iter->second->child_lookup_list){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Parent item (ID: {0}) does not have child_lookup_list.", _parent_item->get_instance_id()));
+    return;
+  }
+  
+  auto _check_same_iter = _parent_iter->second->child_lookup_list->find(key);
+  if(_check_same_iter != _parent_iter->second->child_lookup_list->end()){
+    // Create confirmation dialogue
+    _rename_applied_data _data;
+      _data.current_item = item;
+      _data.new_key = cpplua_create_var_copy(key);
+
+    Variant _param = convert_to_variant(&_data);
+    SignalOwnership(Signal(_global_confirmation_dialog, "confirmed"), Callable(this, "_rename_tree_item_key_accept_gd").bind(_param))
+      .replace_ownership();
+    SignalOwnership(Signal(_global_confirmation_dialog, "canceled"), Callable(this, "_rename_tree_item_key_cancel_gd").bind(_param))
+      .replace_ownership();
+
+    _global_confirmation_dialog->set_text("Another value with same key already exists. Do you wish to override?");
+    _global_confirmation_dialog->set_title("Confirmation");
+    _global_confirmation_dialog->popup_centered();
+
+    return;
+  }  
+
+  _rename_tree_item_key_accept(item, key);
+}
+
+void LuaVariableTree::_rename_tree_item_key_cancel_gd(const Variant& data){
+  // Delete the data
+  _rename_applied_data _data = parse_variant_data<_rename_applied_data>(data);
+  cpplua_delete_variant(_data.new_key);
+}
+
+void LuaVariableTree::_rename_tree_item_key_accept_gd(const Variant& data){
+  _rename_applied_data _data = parse_variant_data<_rename_applied_data>(data);
+  _rename_tree_item_key_accept(_data.current_item, _data.new_key);
+
+  delete _data.new_key;
+}
+
+void LuaVariableTree::_rename_tree_item_key_accept(godot::TreeItem* item, const I_variant* key){
+  auto _iter = _vartree_map.find(item->get_instance_id());
+  if(_iter == _vartree_map.end()){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Item (ID: {0}) does not exist in this TreeItem.", item->get_instance_id()));
+    return;
+  }
+
+  TreeItem* _parent_item = item->get_parent();
+  if(!_parent_item){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Item (ID: {0}) does not have a parent.", item->get_instance_id()));
+    return;
+  }
+
+  auto _parent_iter = _vartree_map.find(_parent_item->get_instance_id());
+  if(_parent_iter == _vartree_map.end()){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Item's (ID: {0}) parent does not exist in this TreeItem.", item->get_instance_id()));
+    return;
+  }
+
+  if(!_parent_iter->second->this_value->is_type(I_table_var::get_static_lua_type())){
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaVariableTree] Item's (ID: {0}) parent is not a table value."));
+    return;
+  }
+
+  I_table_var* _tvar = dynamic_cast<I_table_var*>(_parent_iter->second->this_value);
+
+  // remove the previous same key (if exist)
+  auto _same_item_lookup_iter = _parent_iter->second->child_lookup_list->find(key);
+  if(_same_item_lookup_iter != _parent_iter->second->child_lookup_list->end()){
+    auto _same_item_iter = _vartree_map.find(_same_item_lookup_iter->second);
+    TreeItem* _same_item = _same_item_iter->second->this_item;
+
+    _remove_tree_item(_same_item);
+  }
+  
+  // change the child_lookup_list
+  _parent_iter->second->child_lookup_list->insert({key, item->get_instance_id()});
+
+  // rename the key
+  _tvar->rename_value(_iter->second->this_key, key);
+
+  // change the key value
+  if(_iter->second->this_key)
+    cpplua_delete_variant(_iter->second->this_key);
+
+  _iter->second->this_key = cpplua_create_var_copy(key);
+
+  _update_tree_item(item, NULL);
+}
+
+
 void LuaVariableTree::_variable_setter_do_popup_add_table_item(TreeItem* parent_item, uint64_t flag){
   _variable_setter_do_popup_add_table_item(parent_item, NULL, flag);
 }
@@ -1368,14 +1570,23 @@ void LuaVariableTree::_open_context_menu(){
 
     _data.part_list.insert(_data.part_list.end(), _tmp_part);
 
+    // disable rename value for local variable
+      _tmp_part = PopupContextMenu::MenuData::Part();
+      _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
+      _tmp_part.label = "Rename Variable";
+      _tmp_part.id = context_menu_rename;
+      _tmp_part.is_disabled = _iter->second->_mflag & metadata_local_item;
+      _tmp_part.tooltip_text = (_iter->second->_mflag & metadata_local_item)? "Local variables cannot be ranamed.": "";
+    _data.part_list.insert(_data.part_list.end(), _tmp_part);
+
     // disable copying value for local variable
-    if((_iter->second->_mflag & metadata_local_item) <= 0){
-        _tmp_part = PopupContextMenu::MenuData::Part();
-        _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
-        _tmp_part.label = "Copy Variable";
-        _tmp_part.id = context_menu_copy;
-      _data.part_list.insert(_data.part_list.end(), _tmp_part);
-    }
+      _tmp_part = PopupContextMenu::MenuData::Part();
+      _tmp_part.item_type = PopupContextMenu::MenuData::type_normal;
+      _tmp_part.label = "Copy Variable";
+      _tmp_part.id = context_menu_copy;
+      _tmp_part.is_disabled = _iter->second->_mflag & metadata_local_item;
+      _tmp_part.tooltip_text = (_iter->second->_mflag & metadata_local_item)? "Local variables cannot be copied.": "";
+    _data.part_list.insert(_data.part_list.end(), _tmp_part);
   }
 
   // add custom contexts

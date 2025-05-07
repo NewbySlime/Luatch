@@ -16,6 +16,13 @@ template<typename T_key, typename T_value> class CountedOwnership{
     std::map<T_key, _value_data*> _value_map;
 
   public:
+    ~CountedOwnership(){
+      for(auto _pair: _value_map)
+        delete _pair.second;
+
+      _value_map.clear();
+    }
+
     // If key already exists, the existing value will not be replaced. But the key count will be incremented.
     void insert(T_key key, T_value value){
       _value_data* _result = NULL;
@@ -60,10 +67,10 @@ template<typename T_key, typename T_value> class CountedOwnership{
       return _iter->second->key_count;
     }
 
-    T_value get_value(T_key key) const{
+    T_value get_value(T_key key, T_value default_value) const{
       auto _iter = _value_map.find(key);
       if(_iter == _value_map.end()){
-        T_value _dmp = default;
+        T_value _dmp = default_value;
         return _dmp;
       }
 

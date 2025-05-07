@@ -9,6 +9,10 @@
 
 #include "godot_cpp/variant/utility_functions.hpp"
 
+// compiler is upset if I put it in order
+#include "debug_log.h"
+
+
 using namespace GameUtils;
 using namespace godot;
 
@@ -41,6 +45,9 @@ Logger::Logger(){
 #if (_WIN64) || (_WIN32)
   _log_mutex = CreateMutex(NULL, false, NULL);
 #endif
+
+  SET_LOG_VERBOSE_FUNCTION(print_log_static, print_warn_static, print_err_static);
+  SET_LOG_VERBOSE_FUNCTION(print_log_static_std, print_warn_static_std, print_err_static_std);
 }
 
 Logger::~Logger(){
@@ -97,6 +104,19 @@ void Logger::print_err_static(const String &err){
   if(_inst)
     _inst->print_err(err);
 }
+
+void Logger::print_log_static_std(const std::string& log){
+  print_log_static(log.c_str());
+}
+
+void Logger::print_warn_static_std(const std::string& warning){
+  print_warn_static(warning.c_str());
+}
+
+void Logger::print_err_static_std(const std::string& err){
+  print_err_static(err.c_str());
+}
+
 
 void Logger::print_log(const String &log){
   __LOCK_MUTEX(_log_mutex);

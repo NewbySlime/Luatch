@@ -1,5 +1,6 @@
 #include "defines.h"
 #include "dllutil.h"
+#include "dynamic_scroll_container.h"
 #include "error_trigger.h"
 #include "gdutils.h"
 #include "logger.h"
@@ -11,6 +12,7 @@
 #include "godot_cpp/classes/engine.hpp"
 #include "godot_cpp/classes/option_button.hpp"
 #include "godot_cpp/classes/scene_tree.hpp"
+#include "godot_cpp/classes/window.hpp"
 
 #include "vector"
 
@@ -43,6 +45,7 @@ const char* PopupVariableSetter::key_cancel_button = "__cancel_button";
 typedef void (PopupVariableSetter::*key_cb_type)(const Variant& value);
 std::map<String, key_cb_type>* _key_cb = NULL;
 std::map<String, uint32_t>* _setter_mode_enum_lookup = NULL;
+static Vector2i _contents_padding_offset = Vector2(0, 8);
 
 static void _code_deinitiate();
 static destructor_helper _dh(_code_deinitiate);
@@ -83,20 +86,32 @@ static void _code_deinitiate(){
 
 
 void PopupVariableSetter::_bind_methods(){
+  ClassDB::bind_method(D_METHOD("_on_control_node_resized", "new_size", "cb"), &PopupVariableSetter::_on_control_node_resized);
   ClassDB::bind_method(D_METHOD("_on_value_set", "key", "value"), &PopupVariableSetter::_on_value_set);
   ClassDB::bind_method(D_METHOD("_on_accept_button_pressed"), &PopupVariableSetter::_on_accept_button_pressed);
   ClassDB::bind_method(D_METHOD("_on_cancel_button_pressed"), &PopupVariableSetter::_on_cancel_button_pressed);
   ClassDB::bind_method(D_METHOD("_on_popup"), &PopupVariableSetter::_on_popup);
   ClassDB::bind_method(D_METHOD("_on_popup_hide"), &PopupVariableSetter::_on_popup_hide);
 
-  ClassDB::bind_method(D_METHOD("set_option_list_path", "path"), &PopupVariableSetter::set_option_list_path);
-  ClassDB::bind_method(D_METHOD("get_option_list_path"), &PopupVariableSetter::get_option_list_path);
+  ClassDB::bind_method(D_METHOD("set_control_node_path", "path"), &PopupVariableSetter::set_control_node_path);
+  ClassDB::bind_method(D_METHOD("get_control_node_path"), &PopupVariableSetter::get_control_node_path);
 
-  ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "option_list"), "set_option_list_path", "get_option_list_path");
+  ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "control_node"), "set_control_node_path", "get_control_node_path");
 
   ADD_SIGNAL(MethodInfo(PopupVariableSetter::s_applied));
   ADD_SIGNAL(MethodInfo(PopupVariableSetter::s_cancelled));
   ADD_SIGNAL(MethodInfo(PopupVariableSetter::s_mode_type_changed, PropertyInfo(Variant::INT, "mode")));
+}
+
+
+void PopupVariableSetter::_on_control_node_resized(const Vector2& new_size, const Callable& cb){
+  Window* _this_window = get_tree()->get_root();
+  Vector2 _max_size = _this_window->get_size();
+
+  Vector2 _new_size = new_size + _contents_padding_offset;
+  _new_size = _new_size.clamp(Vector2(), _max_size);
+  set_size(_new_size);
+  cb.call(_new_size);
 }
 
 
@@ -173,7 +188,7 @@ void PopupVariableSetter::_reset_enum_button_config(){
     {setter_mode_string, "String"},
     {setter_mode_number, "Number"},
     {setter_mode_bool, "Boolean"},
-    {setter_mode_add_table, "Create New Table"},
+    {setter_mode_add_table, "As New Table"},
     {setter_mode_reference_list, "From Reference"}
   };
 
@@ -246,9 +261,22 @@ void PopupVariableSetter::_ready(){
   int _quit_code;
 
 { // enclosure for using goto
-  _option_list = get_node<OptionListMenu>(_option_list_path);
+  _control_node = get_node<Node>(_control_node_path);
+  if(!_control_node){
+    GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get control node.");
+    _quit_code = ERR_UNCONFIGURED;
+
+    goto on_error_label;
+  }
+
+  if(_control_node->is_class(DynamicScrollContainer::get_class_static()))
+    _control_node->connect(DynamicScrollContainer::s_about_to_resize, Callable(this, "_on_control_node_resized"));
+  else
+    GameUtils::Logger::print_warn_static("[PopupVariableSetter] Control node is not a type of DynamicScrollContainer.");
+
+  _option_list = find_any_node<OptionListMenu>(_control_node, true);
   if(!_option_list){
-    GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get OptionListMenu.");
+    GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get OptionListMenu of the control node.");
     _quit_code = ERR_UNCONFIGURED;
 
     goto on_error_label;
@@ -302,9 +330,6 @@ void PopupVariableSetter::_ready(){
   _cancel_button->connect("pressed", Callable(this, "_on_cancel_button_pressed"));
 
   set_mode_type(setter_mode_string);
-
-  // let it resize to child's minimum size
-  set_size(Vector2(0,0));
 
 } // enclosure closing
 
@@ -458,10 +483,10 @@ String PopupVariableSetter::get_variable_key() const{
 }
 
 
-void PopupVariableSetter::set_option_list_path(const NodePath& path){
-  _option_list_path = path;
+void PopupVariableSetter::set_control_node_path(const NodePath& path){
+  _control_node_path = path;
 }
 
-NodePath PopupVariableSetter::get_option_list_path() const{
-  return _option_list_path;
+NodePath PopupVariableSetter::get_control_node_path() const{
+  return _control_node_path;
 }

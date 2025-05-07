@@ -4,8 +4,6 @@
 #include "string"
 #include "godot_cpp/variant/string.hpp"
 
-// TODO use macros to check if build with verbose or not
-// TODO set log function
 
 // NOTE: Only use the macros, so when not created with "Verbose" flag, the argument will be discarded.
 

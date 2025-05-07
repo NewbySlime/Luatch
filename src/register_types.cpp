@@ -11,7 +11,9 @@
 #include "code_flow_control.h"
 #include "code_window.h"
 #include "console_window.h"
+#include "counted_object_lifetime_node.h"
 #include "data_node.h"
+#include "dynamic_scroll_container.h"
 #include "execution_context.h"
 #include "focus_area.h"
 #include "global_variables.h"
@@ -32,6 +34,7 @@
 #include "slide_animation_control.h"
 #include "splash_panel.h"
 #include "split_ratio_maintainer.h"
+#include "testing_classes/property_changes_logger.h"
 #include "ui_control.h"
 #include "variable_storage.h"
 #include "variable_watcher.h"
@@ -53,7 +56,9 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<CodeFlowControl>();
   ClassDB::register_class<CodeWindow>();
   ClassDB::register_class<ConsoleWindow>();
+  ClassDB::register_class<CountedObjectLifetimeNode>();
   ClassDB::register_class<DataNode>();
+  ClassDB::register_class<DynamicScrollContainer>();
   ClassDB::register_class<ExecutionContext>();
   ClassDB::register_class<FocusArea>();
   ClassDB::register_class<GameUtils::Logger>();
@@ -69,6 +74,7 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_abstract_class<PersistanceNode>();
   ClassDB::register_class<PopupContextMenu>();
   ClassDB::register_class<PopupVariableSetter>();
+  ClassDB::register_class<PropertyChangesLogger>();
   ClassDB::register_class<ReferenceQueryMenu>();
   ClassDB::register_class<SlideAnimationControl>();
   ClassDB::register_class<SplashPanel>();
@@ -76,7 +82,7 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<UIControl>();
   ClassDB::register_class<VariableStorage>();
   ClassDB::register_class<VariableWatcher>();
-
+  
   // inheriting class
   ClassDB::register_class<ApplicationConfigData>();
   ClassDB::register_class<ApplicationMetadata>();
@@ -92,11 +98,11 @@ extern "C" {
   // Initialization.
   GDExtensionBool GDE_EXPORT gdextension_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
     godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
-
+    
     init_obj.register_initializer(initialize_gdextension_module);
     init_obj.register_terminator(uninitialize_gdextension_module);
     init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
-
+    
     return init_obj.init();
   }
 }

@@ -14,6 +14,12 @@
 #include "map"
 
 
+// TODO
+//  [v] The scene of this class should use CenterContainer as the parent, just to combat the dynamic popup
+//  [v] If possible, use ScrollContainer
+//  [v] Create a propose system where this node will ask the parent to resize more (minimum size excluded), then do it recursively. This way, the max and min size will be achieved.
+//  [ ] Use find_node instead of using determined path
+//  [ ] Connect to DynamicScrollContainer
 class PopupVariableSetter: public godot::PopupPanel{
   GDCLASS(PopupVariableSetter, godot::PopupPanel)
 
@@ -73,8 +79,10 @@ class PopupVariableSetter: public godot::PopupPanel{
 
   
   private:
-    godot::NodePath _option_list_path;
     OptionListMenu* _option_list;
+
+    godot::NodePath _control_node_path;
+    godot::Node* _control_node;
     
     ReferenceQueryMenu* _reference_query_menu;
 
@@ -97,6 +105,8 @@ class PopupVariableSetter: public godot::PopupPanel{
     bool _type_enum_button_signal = false;
     bool _applied = false;
 
+
+    void _on_control_node_resized(const godot::Vector2& new_size, const godot::Callable& cb);
 
     void _on_value_set(const godot::String& key, const godot::Variant& value);
     void _on_value_set_string_data(const godot::Variant& data);
@@ -158,8 +168,8 @@ class PopupVariableSetter: public godot::PopupPanel{
     void set_variable_key(const godot::String& key);
     godot::String get_variable_key() const;
 
-    void set_option_list_path(const godot::NodePath& path);
-    godot::NodePath get_option_list_path() const;
+    void set_control_node_path(const godot::NodePath& path);
+    godot::NodePath get_control_node_path() const;
 };
 
 #endif
