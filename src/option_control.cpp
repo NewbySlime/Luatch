@@ -46,8 +46,8 @@ void OptionControl::_bind_methods(){
   ClassDB::bind_method(D_METHOD("set_settings_unfocus_area", "path"), &OptionControl::set_settings_unfocus_area);
   ClassDB::bind_method(D_METHOD("get_settings_unfocus_area"), &OptionControl::get_settings_unfocus_area);
 
-  ClassDB::bind_method(D_METHOD("set_option_menu_path", "path"), &OptionControl::set_option_menu_path);
-  ClassDB::bind_method(D_METHOD("get_option_menu_path"), &OptionControl::get_option_menu_path);
+  ClassDB::bind_method(D_METHOD("set_option_control_path", "path"), &OptionControl::set_option_control_path);
+  ClassDB::bind_method(D_METHOD("get_option_control_path"), &OptionControl::get_option_control_path);
 
   ADD_SIGNAL(MethodInfo(OptionControl::s_value_set, PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value")));
 
@@ -56,7 +56,7 @@ void OptionControl::_bind_methods(){
   ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "animation_player"), "set_animation_player", "get_animation_player");
   ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "settings_button"), "set_settings_button", "get_settings_button");
   ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "settings_unfocus_area"), "set_settings_unfocus_area", "get_settings_unfocus_area");
-  ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "option_menu_path"), "set_option_menu_path", "get_option_menu_path");
+  ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "option_control"), "set_option_control_path", "get_option_control_path");
 }
 
 
@@ -78,7 +78,6 @@ void OptionControl::_on_option_focus_exited(){
 
 
 void OptionControl::_on_option_list_menu_ready(Node* node){
-  _is_option_menu_ready = true;
   _update_option_ui();
 }
 
@@ -89,9 +88,6 @@ void OptionControl::_on_config_loaded(){
 
 
 void OptionControl::_update_option_ui(){
-  if(!_is_option_menu_ready)
-    return;
-
   Array _key_list = _option_menu->get_option_keys();
   for(int i = 0; i < _key_list.size(); i++){
     Variant _key = _key_list[i];
@@ -165,7 +161,14 @@ void OptionControl::_ready(){
     goto on_error_label;
   }
 
-  _option_menu = get_node<OptionListMenu>(_option_menu_path);
+  Control* _option_control = get_node<Control>(_option_control_path);
+  if(!_option_control){
+    GameUtils::Logger::print_err_static("[OptionControl] Cannot get option control path.");
+    _quit_code = ERR_UNCONFIGURED;
+    goto on_error_label;
+  }
+
+  _option_menu = find_any_node<OptionListMenu>(_option_control, true);
   if(!_option_menu){
     GameUtils::Logger::print_err_static("[OptionControl] Cannot get OptionListMenu.");
     _quit_code = ERR_UNCONFIGURED;
@@ -261,10 +264,10 @@ NodePath OptionControl::get_settings_unfocus_area() const{
 }
 
 
-void OptionControl::set_option_menu_path(const NodePath& path){
-  _option_menu_path = path;
+void OptionControl::set_option_control_path(const NodePath& path){
+  _option_control_path = path;
 }
 
-NodePath OptionControl::get_option_menu_path() const{
-  return _option_menu_path;
+NodePath OptionControl::get_option_control_path() const{
+  return _option_control_path;
 }

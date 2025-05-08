@@ -44,6 +44,26 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j6ujq"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0rdsd"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+border_width_bottom = 5
+border_color = Color(0, 0.0252953, 0.0821214, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8kcb2"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+border_width_left = 2
+border_width_bottom = 2
+border_color = Color(0.686275, 0.686275, 0.686275, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i7luo"]
+bg_color = Color(0.18359, 0.18359, 0.18359, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mfhn1"]
+bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_npbu6"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
 [sub_resource type="Animation" id="Animation_mm0tu"]
 length = 0.001
 tracks/0/type = "value"
@@ -133,26 +153,6 @@ _data = {
 "slide_animation": SubResource("Animation_1mtd0"),
 "slide_animation_hide": SubResource("Animation_ww3hp")
 }
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0rdsd"]
-bg_color = Color(0.113725, 0.113725, 0.113725, 1)
-border_width_bottom = 5
-border_color = Color(0, 0.0252953, 0.0821214, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8kcb2"]
-bg_color = Color(0.113725, 0.113725, 0.113725, 1)
-border_width_left = 2
-border_width_bottom = 2
-border_color = Color(0.686275, 0.686275, 0.686275, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i7luo"]
-bg_color = Color(0.18359, 0.18359, 0.18359, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mfhn1"]
-bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_npbu6"]
-bg_color = Color(0.113725, 0.113725, 0.113725, 1)
 
 [sub_resource type="Animation" id="Animation_w7a1u"]
 resource_name = "PanOutAnimation"
@@ -605,6 +605,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 scale = Vector2(1e-05, 1e-05)
 
+[node name="OptionControl" type="OptionControl" parent="SettingsArea"]
+settings_logo = ExtResource("14_dify4")
+close_logo = ExtResource("15_o08uj")
+animation_player = NodePath("../SettingPanel/AnimationPlayer")
+settings_button = NodePath("../SettingPanel/BackgroundPanel/ButtonPanel/MarginContainer/Button")
+settings_unfocus_area = NodePath("../UnfocusArea")
+option_control = NodePath("../SettingPanel/BackgroundPanel")
+
 [node name="SettingPanel" type="Control" parent="SettingsArea"]
 layout_mode = 1
 anchors_preset = 11
@@ -613,24 +621,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 2
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="SettingsArea/SettingPanel"]
-root_node = NodePath("../SlideAnimationControl")
-libraries = {
-"": SubResource("AnimationLibrary_1y4wo")
-}
-
-[node name="OptionControl" type="OptionControl" parent="SettingsArea/SettingPanel"]
-settings_logo = ExtResource("14_dify4")
-close_logo = ExtResource("15_o08uj")
-animation_player = NodePath("../AnimationPlayer")
-settings_button = NodePath("../BackgroundPanel/ButtonPanel/MarginContainer/Button")
-settings_unfocus_area = NodePath("../../UnfocusArea")
-option_menu_path = NodePath("../BackgroundPanel/OptionListMenu")
-
-[node name="SlideAnimationControl" type="SlideAnimationControl" parent="SettingsArea/SettingPanel"]
-target_node = NodePath("../BackgroundPanel")
-slide_direction = 3
 
 [node name="BackgroundPanel" type="Panel" parent="SettingsArea/SettingPanel"]
 custom_minimum_size = Vector2(500, 0)
@@ -672,19 +662,13 @@ icon = ExtResource("14_dify4")
 icon_alignment = 1
 expand_icon = true
 
-[node name="OptionListMenu" type="OptionListMenu" parent="SettingsArea/SettingPanel/BackgroundPanel"]
-physics_interpolation_mode = 0
+[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu"]
-layout_mode = 0
-offset_right = 500.0
-offset_bottom = 648.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
@@ -694,127 +678,140 @@ theme_override_constants/margin_top = 60
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 60
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Option Menu"
 horizontal_alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_top = 20
 
-[node name="ScrollContainer" type="ScrollContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 
-[node name="IgnoreInternalDataOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="IgnoreInternalDataOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "ignore_internal_data"
 physics_interpolation_mode = 0
 custom_minimum_size = Vector2(44, 24)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_n2lrs")
 text = "Ignore Internal Data"
 
-[node name="CheckButton" type="CheckButton" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
+[node name="CheckButton" type="CheckButton" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 10
 
-[node name="CodeWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="CodeWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "code_window_font"
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Code Window Font"
 
-[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
 max_value = 80.0
 value = 1.0
 suffix = "px"
 
-[node name="InspectorFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="InspectorFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "inspector_font"
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Inspector Font"
 
-[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
 max_value = 80.0
 value = 1.0
 suffix = "px"
 
-[node name="ConsoleWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="ConsoleWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "console_window_font"
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Console Window Font"
 
-[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 1.0
 max_value = 80.0
 value = 1.0
 suffix = "px"
 
-[node name="UIScaleOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="UIScaleOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 option_key = "ui_scale"
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "UI Scale"
 
-[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/OptionListMenu/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
 layout_mode = 2
 min_value = 40.0
 max_value = 200.0
 value = 40.0
 suffix = "%"
+
+[node name="OptionListMenu" type="OptionListMenu" parent="SettingsArea/SettingPanel/BackgroundPanel"]
+target_list_node = NodePath("../MarginContainer")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="SettingsArea/SettingPanel"]
+root_node = NodePath("../SlideAnimationControl")
+libraries = {
+"": SubResource("AnimationLibrary_1y4wo")
+}
+
+[node name="SlideAnimationControl" type="SlideAnimationControl" parent="SettingsArea/SettingPanel"]
+target_node = NodePath("../BackgroundPanel")
+slide_direction = 3
 
 [node name="SplashPanel" type="SplashPanel" parent="."]
 reset_control_node_path = NodePath("Panel")

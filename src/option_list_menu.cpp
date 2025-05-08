@@ -23,6 +23,9 @@ void OptionListMenu::_bind_methods(){
 
   ClassDB::bind_method(D_METHOD("get_target_list_node"), &OptionListMenu::get_target_list_node);
   ClassDB::bind_method(D_METHOD("set_target_list_node", "path"), &OptionListMenu::set_target_list_node);
+  
+  ClassDB::bind_method(D_METHOD("set_value_data", "key", "value"), &OptionListMenu::set_value_data);
+  ClassDB::bind_method(D_METHOD("get_value_data", "key"), &OptionListMenu::get_value_data);
 
   ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "target_list_node"), "set_target_list_node", "get_target_list_node");
 
@@ -74,6 +77,7 @@ void OptionListMenu::_ready(){
   _update_option_nodes(_target_list_node);
 
   emit_signal(SIGNAL_ON_READY, this);
+  _is_ready = true;
 } // enclosure closing
 
   return;
@@ -82,6 +86,14 @@ void OptionListMenu::_ready(){
   on_error:{}
   trigger_generic_error_message();
   get_tree()->quit(_quit_code);
+}
+
+void OptionListMenu::_process(double delta){
+  Engine* _engine = Engine::get_singleton();
+  if(_engine->is_editor_hint())
+    return;
+
+  _update_list.update();
 }
 
 
@@ -123,6 +135,11 @@ void OptionListMenu::set_value_data(const String& key, const Variant& value){
   auto _iter = _option_lists.find(key);
   if(_iter == _option_lists.end()){
     GameUtils::Logger::print_warn_static(gd_format_str("[OptionListMenu] Cannot set value of option of key '{0}'.", key));
+    return;
+  }
+
+  if(!_is_ready){
+    _update_list.append(Callable(this, "set_value_data").bind(key, value));
     return;
   }
 

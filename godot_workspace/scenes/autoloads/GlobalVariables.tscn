@@ -20,7 +20,7 @@ global_data = {
 
 [node name="PopupMenu" parent="." instance=ExtResource("1_arkwe")]
 initial_position = 0
-size = Vector2i(334, 608)
+size = Vector2i(336, 608)
 
 [node name="ContextMenu" parent="." instance=ExtResource("2_gxdmg")]
 unfocusable = false

@@ -1,19 +1,16 @@
 #ifndef OPTION_LIST_MENU_HEADER
 #define OPTION_LIST_MENU_HEADER
 
+#include "one_timed_callback_list.h"
+
 #include "godot_cpp/classes/control.hpp"
 
 #include "map"
 
 
-// TODO
-//  [v] This class should not be as a parent, this should be as a child of a target parent, as that parent might need another type of control class.
-//  [v] All classes that use OptionListMenu might need to use find_node function to get this class.
-//  [v] Use property for if using the target list of itself or actually a target node.
-//  [ ] Refactor this class to use godot::Node
 class OptionValueControl;
-class OptionListMenu: public godot::Control{
-  GDCLASS(OptionListMenu, godot::Control)
+class OptionListMenu: public godot::Node{
+  GDCLASS(OptionListMenu, godot::Node)
 
   public:
     // Param:
@@ -27,6 +24,9 @@ class OptionListMenu: public godot::Control{
     godot::NodePath _target_list_node_path;
     godot::Node* _target_list_node = NULL;
 
+    bool _is_ready = false;
+    OneTimedCallbackList _update_list;
+
     void _on_option_changed(const godot::String& key, const godot::Variant& value);
 
     void _update_option_nodes(godot::Node* parent);
@@ -36,6 +36,7 @@ class OptionListMenu: public godot::Control{
 
   public:
     void _ready() override;
+    void _process(double delta) override;
 
     godot::NodePath get_target_list_node() const;
     void set_target_list_node(const godot::NodePath& path);

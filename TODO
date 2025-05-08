@@ -1,0 +1,11 @@
+Feature TODO
+  [ ] General Features
+    [ ] Linux Support.
+    [ ] Stack view of the currently run functions.
+  [ ] Debugging feature
+    [ ] As some logs are created with an ID of an object embedded to a log message, the identification info is useless if no indicator which object with the ID located at.
+
+  [ ] Planned features
+    [ ] Separating debugger and user program (that uses the DLL), by using IPC.
+    [ ] Performance monitor.
+    [ ] File editing.

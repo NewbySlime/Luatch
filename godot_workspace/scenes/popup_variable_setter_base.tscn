@@ -197,7 +197,6 @@ text = "Cancel"
 
 [node name="OptionListMenu" type="OptionListMenu" parent="CenterContainer"]
 target_list_node = NodePath("../..")
-layout_mode = 2
 
 [node name="GroupInvoker" type="GroupInvoker" parent="CenterContainer/OptionListMenu"]
 group_node_data = {

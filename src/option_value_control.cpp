@@ -77,6 +77,9 @@ void OptionValueControl::_bind_methods(){
   ClassDB::bind_method(D_METHOD("set_option_key", "key"), &OptionValueControl::set_option_key);
   ClassDB::bind_method(D_METHOD("get_option_key"), &OptionValueControl::get_option_key);
 
+  ClassDB::bind_method(D_METHOD("set_option_value", "value"), &OptionValueControl::set_option_value);
+  ClassDB::bind_method(D_METHOD("get_option_value"), &OptionValueControl::get_option_value);
+
   ADD_PROPERTY(PropertyInfo(Variant::STRING, "option_key"), "set_option_key", "get_option_key");
 
   ADD_SIGNAL(MethodInfo(s_value_set, PropertyInfo(Variant::STRING, "key"), PropertyInfo(Variant::NIL, "value")));
@@ -216,6 +219,8 @@ void OptionValueControl::_ready(){
       goto on_error;
     }
   }
+
+  _is_ready = true;
 } // enclosure closing
 
   return;
@@ -226,6 +231,14 @@ void OptionValueControl::_ready(){
 
     get_tree()->quit(_quit_code);
   return;}
+}
+
+void OptionValueControl::_process(double delta){
+  Engine* _engine = Engine::get_singleton();
+  if(_engine->is_editor_hint())
+    return;
+
+  _update_list.update();
 }
 
 
@@ -254,7 +267,11 @@ String OptionValueControl::get_option_key() const{
 
 
 void OptionValueControl::set_option_value(const Variant& value){
-  // impossible to fail until try to set, as the initialization already handled in _ready
+  if(!_is_ready){
+    _update_list.append(Callable(this, "set_option_value").bind(value));
+    return;
+  }
+
   int _class_code = _get_node_base_class(_option_control_node);
   switch(_class_code){
     break; case base_class_Range:{

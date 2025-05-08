@@ -14,12 +14,6 @@
 #include "map"
 
 
-// TODO
-//  [v] The scene of this class should use CenterContainer as the parent, just to combat the dynamic popup
-//  [v] If possible, use ScrollContainer
-//  [v] Create a propose system where this node will ask the parent to resize more (minimum size excluded), then do it recursively. This way, the max and min size will be achieved.
-//  [ ] Use find_node instead of using determined path
-//  [ ] Connect to DynamicScrollContainer
 class PopupVariableSetter: public godot::PopupPanel{
   GDCLASS(PopupVariableSetter, godot::PopupPanel)
 

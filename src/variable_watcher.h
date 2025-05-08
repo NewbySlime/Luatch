@@ -21,6 +21,8 @@
 
 class VariableStorage;
 
+// TODO
+//  [ ] Add function to refresh data from OptionControl
 class VariableWatcher: public LuaVariableTree{
   GDCLASS(VariableWatcher, LuaVariableTree)
 

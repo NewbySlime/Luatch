@@ -1,6 +1,8 @@
 #ifndef OPTION_VALUE_CONTROL_HEADER
 #define OPTION_VALUE_CONTROL_HEADER
 
+#include "one_timed_callback_list.h"
+
 #include "godot_cpp/classes/box_container.hpp"
 #include "godot_cpp/variant/node_path.hpp"
 
@@ -31,6 +33,9 @@ class OptionValueControl: public godot::BoxContainer{
     godot::Node* _option_control_node = NULL;
 
     godot::String _option_key;
+    OneTimedCallbackList _update_list;
+
+    bool _is_ready = false;
 
     void _on_changed_range(float num);
     void _on_changed_option_button(int idx);
@@ -48,6 +53,7 @@ class OptionValueControl: public godot::BoxContainer{
 
   public:
     void _ready() override;
+    void _process(double delta) override;
 
     // Might return empty path if this object not yet ready or value control node cannot be found. 
     // If relative_node is NULL, returned path is absolute.

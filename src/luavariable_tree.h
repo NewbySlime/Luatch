@@ -21,6 +21,7 @@
 #include "set"
 
 
+// TODO find code smell in this class
 class LuaVariableTree: public godot::Tree{
   GDCLASS(LuaVariableTree, godot::Tree)
 
@@ -137,10 +138,9 @@ class LuaVariableTree: public godot::Tree{
 
     void _on_setter_cancelled();
     void _on_setter_applied(const godot::Variant& pass_data);
-    void _on_setter_applied_add_table(godot::TreeItem* current_item, lua::I_variant* key, lua::I_variant* value);
-    void _on_setter_applied_add_table_confirmed_variant(const godot::Variant& data);
-    void _on_setter_applied_add_table_cancelled_variant(const godot::Variant& data);
-    void _on_setter_applied_add_table_confirmed(_variable_tree_item_metadata* _metadata, lua::I_variant* key, lua::I_variant* value);
+    void _on_setter_applied_add(godot::TreeItem* current_item, lua::I_variant* key, lua::I_variant* value);
+    void _on_setter_applied_add_confirmed_variant(const godot::Variant& data);
+    void _on_setter_applied_add_cancelled_variant(const godot::Variant& data);
     void _on_setter_applied_edit(godot::TreeItem* current_item, lua::I_variant* value);
 
     void _on_file_closed(const godot::String& file_path, godot::Node* code_window);
@@ -198,6 +198,10 @@ class LuaVariableTree: public godot::Tree{
     // item_state can be NULL to skip state checking.
     void _reveal_tree_item(godot::TreeItem* item, _item_state* item_state);
     void _sort_item_child(godot::TreeItem* parent_item);
+
+    // If the key_var already exists in parent_item, the item will be reused.
+    void _add_new_item(godot::TreeItem* parent_item, lua::I_variant* key_var, lua::I_variant* value_var);
+    void _add_new_item(_variable_tree_item_metadata* parent_metadata, lua::I_variant* key_var, lua::I_variant* value_var);
     
     void _store_item_state(godot::TreeItem* item, _item_state* item_state);
 

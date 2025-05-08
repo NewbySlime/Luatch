@@ -31,7 +31,7 @@ class OptionControl: public godot::Node{
     godot::NodePath _animation_player_path;
     godot::NodePath _settings_button_path;
     godot::NodePath _settings_unfocus_area_path;
-    godot::NodePath _option_menu_path;
+    godot::NodePath _option_control_path;
 
     GlobalVariables* _gvariables;    
 
@@ -45,7 +45,6 @@ class OptionControl: public godot::Node{
     godot::Callable _data_get_function;
 
     bool _is_showing = false;
-    bool _is_option_menu_ready = false;
 
     void _on_value_set(const godot::String& key, const godot::Variant& value);
 
@@ -86,8 +85,8 @@ class OptionControl: public godot::Node{
     void set_settings_unfocus_area(const godot::NodePath& path);
     godot::NodePath get_settings_unfocus_area() const;
 
-    void set_option_menu_path(const godot::NodePath& path);
-    godot::NodePath get_option_menu_path() const;
+    void set_option_control_path(const godot::NodePath& path);
+    godot::NodePath get_option_control_path() const;
 };
 
 #endif

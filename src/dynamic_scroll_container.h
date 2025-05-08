@@ -7,9 +7,6 @@
 
 // This class will try to resize itself to fit child's size. But its constraints are from the parent.
 // This class does not work if the resizing work is done by parent.
-// TODO
-//  [ ] About to resize signal, with a callback to change its appropriate size
-//  [ ] Option to change maximum size
 class DynamicScrollContainer: public godot::ScrollContainer{
   GDCLASS(DynamicScrollContainer, godot::ScrollContainer)
 
