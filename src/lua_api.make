@@ -2,14 +2,14 @@
 
 OUTPUT_FILE= unit_test.exe
 
-OPTIONAL_DELETE_FILE= "../../godot_workspace/bin/*release*.dll" "../../godot_workspace/bin/*release*.lib"
-OPTIONAL_DEBUG_DELETE_FILE= "../../godot_workspace/bin/*debug*.dll" "../../godot_workspace/bin/*debug*.lib"
+OPTIONAL_DELETE_FILE= "../../godot_workspace/bin/*release*.dll" "../../godot_workspace/bin/*release*.lib" "../godot_workspace/bin/*release*.so" "../../godot_workspace/bin/*release*.a"
+OPTIONAL_DEBUG_DELETE_FILE= "../../godot_workspace/bin/*debug*.dll" "../../godot_workspace/bin/*debug*.lib" "../godot_workspace/bin/*debug*.so" "../../godot_workspace/bin/*debug*.a"
 
 
-DLL_OUTPUT_FILE= ../../godot_workspace/bin/CPPAPI.dll
-STATIC_DLIB_OUTPUT_FILE = ../../godot_workspace/bin/CPPAPI_static.lib
-UNIT_TEST_MEMTRACKER_OUTPUT_FILE= memtracker.dll
-UNIT_TEST_OUTPUT_FILE= unit_test.exe
+DLL_OUTPUT_FILE= ../../godot_workspace/bin/CPPAPI
+STATIC_DLIB_OUTPUT_FILE = ../../godot_workspace/bin/CPPAPI_static
+UNIT_TEST_MEMTRACKER_OUTPUT_FILE= memtracker
+UNIT_TEST_OUTPUT_FILE= unit_test
 
 CLUA_SOURCE_FOLDER= ./LuaSrc/*.c
 CPPLIB_SOURCE_FOLDER= ./Src/*.cpp
@@ -23,6 +23,8 @@ UNIT_TEST_SOURCE_FOLDER= ./TestSrc/unit_test/*.cpp
 AS_DEBUG=FALSE
 
 COMPILER_TYPE=mingw
+# PLATFORM_TYPE can be windows or unix
+PLATFORM_TYPE=windows
 
 
 COMPILE_COMMAND=
@@ -48,7 +50,7 @@ MSVC_COMBINING_OUTPUT_TARGET_OPTIONS= -OUT:
 
 
 COMPILE_OPTION=
-MINGW_COMPILE_OPTIONS= -c -std=c++17
+MINGW_COMPILE_OPTIONS= -c -std=c++17 -fPIC
 MSVC_COMPILE_OPTIONS= -c -std:c++17 -EHsc -TP
 
 USING_LUA_API_OPTION=
@@ -136,6 +138,20 @@ $(if $(call cmp_str,$(COMPILER_TYPE),msvc),
 	$(eval COMPILED_OBJECT_EXT=$(MSVC_COMPILED_OBJECT_EXT))
 	$(eval OUTPUT_TARGET_OPTION=$(MSVC_OUTPUT_TARGET_OPTIONS))
 	$(eval COMBINING_OUTPUT_TARGET_OPTION=$(MSVC_COMBINING_OUTPUT_TARGET_OPTIONS))
+)
+
+$(if $(call cmp_str,$(PLATFORM_TYPE),windows),
+	$(eval DLL_OUTPUT_FILE=$(DLL_OUTPUT_FILE).dll)
+	$(eval STATIC_DLIB_OUTPUT_FILE=$(STATIC_DLIB_OUTPUT_FILE).lib)
+	$(eval UNIT_TEST_MEMTRACKER_OUTPUT_FILE=$(UNIT_TEST_MEMTRACKER_OUTPUT_FILE).dll)
+	$(eval UNIT_TEST_OUTPUT_FILE=$(UNIT_TEST_MEMTRACKER_OUTPUT_FILE).exe)
+)
+
+$(if $(call cmp_str,$(PLATFORM_TYPE),unix),
+	$(eval DLL_OUTPUT_FILE=$(DLL_OUTPUT_FILE).so)
+	$(eval STATIC_DLIB_OUTPUT_FILE=$(STATIC_DLIB_OUTPUT_FILE).a)
+	$(eval UNIT_TEST_MEMTRACKER_OUTPUT_FILE=$(UNIT_TEST_MEMTRACKER_OUTPUT_FILE).so)
+	$(eval UNIT_TEST_OUTPUT_FILE=$(UNIT_TEST_MEMTRACKER_OUTPUT_FILE))
 )
 endef
 
@@ -249,6 +265,9 @@ f_use_del:
 
 f_as_debug:
 	$(eval AS_DEBUG=TRUE)
+
+f_as_unix:
+	$(eval PLATFORM_TYPE=unix)
 
 
 
