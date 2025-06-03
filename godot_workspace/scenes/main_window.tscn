@@ -321,6 +321,7 @@ icon = ExtResource("12_ifwq8")
 
 [node name="ButtonSave" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
 layout_mode = 2
+tooltip_text = "Save current file."
 icon = ExtResource("7_8hkqq")
 
 [node name="InspectWindowContainer" type="Control" parent="VSplitContainer/HSplitContainer"]
