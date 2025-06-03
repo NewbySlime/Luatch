@@ -68,12 +68,12 @@ After that, set "Custom Template" parameter in exporting configuration window wi
 ## Planned Features
 These planned features are uncertain as of now, end goal of the project might change over time. Reason for uncertainty is due to this project being a personal learning project. As for now, I wanted to push the limits of what I can do with Lua code.
 Note: the list is ordered by priority, top is highest priority, bottom is lowest priority.
-- Editing values using VariableWatcher (not yet for Functions)
 - Linux Support
 - Stack view (containing currently running functions)
 - Seperating debugger and user programs by using IPC (in case of the Lua program does not respond)?
 - Stats monitor
 - File editing (maybe?)
+- ~~Editing values using VariableWatcher~~
 - ~~Breakpoints~~
 - ~~Partial reveal for VariableWatcher~~
 - ~~Reference List (holding Table and Function values as reference)~~
