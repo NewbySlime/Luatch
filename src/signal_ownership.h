@@ -17,7 +17,7 @@ namespace gdutils{
       godot::Callable get_bind_callback() const;
 
       void replace_ownership();
-
+      void release_ownership();
   };
 }
 

@@ -94,6 +94,9 @@ class CodeWindow: public godot::TabContainer{
     void _on_code_context_menu_ready_event(godot::Object* obj);
 
     void _on_thread_initialized();
+
+    void _on_file_selected(const godot::String& str, godot::Node* node);
+    void _on_files_selected(const godot::PackedStringArray& list, godot::Node* node);
   
   protected:
     static void _bind_methods();

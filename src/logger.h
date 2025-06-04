@@ -3,19 +3,14 @@
 
 #include "I_logger.h"
 
-#include "godot_cpp/godot.hpp"
 #include "godot_cpp/classes/node.hpp"
 #include "godot_cpp/classes/file_access.hpp"
 #include "godot_cpp/variant/string.hpp"
 #include "godot_cpp/variant/variant.hpp"
 #include "godot_cpp/variant/array.hpp"
 
-
 #include "map"
-
-#ifdef _WIN64
-#include "windows.h"
-#endif
+#include "mutex"
 
 
 
@@ -38,9 +33,7 @@ namespace GameUtils{
       static const char* s_on_error_log;
 
     private:
-#ifdef _WIN64
-      HANDLE _log_mutex;
-#endif
+      std::mutex _object_mutex;
 
       static godot::String _get_current_time();
       static godot::String _get_log_info(const char* flag);

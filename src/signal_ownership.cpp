@@ -36,3 +36,10 @@ void SignalOwnership::replace_ownership(){
 
   _bound_signal.connect(_bound_cb);
 }
+
+void SignalOwnership::release_ownership(){
+  if(!_bound_cb.is_valid())
+    return;
+
+  _bound_signal.disconnect(_bound_cb);
+}

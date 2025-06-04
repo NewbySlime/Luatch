@@ -5,8 +5,10 @@
 #include "directory_util.h"
 #include "error_trigger.h"
 #include "global_variables.h"
+#include "instance_database.h"
 #include "logger.h"
 #include "node_utils.h"
+#include "signal_ownership.h"
 #include "strutil.h"
 
 #include "Lua-CPPAPI/Src/luaapi_thread.h"
@@ -14,6 +16,7 @@
 
 #include "godot_cpp/classes/dir_access.hpp"
 #include "godot_cpp/classes/engine.hpp"
+#include "godot_cpp/classes/file_dialog.hpp"
 #include "godot_cpp/classes/os.hpp"
 #include "godot_cpp/classes/project_settings.hpp"
 #include "godot_cpp/classes/resource_loader.hpp"
@@ -23,6 +26,7 @@
 #include "godot_cpp/variant/utility_functions.hpp"
 
 
+using namespace gdutils;
 using namespace godot;
 
 
@@ -58,6 +62,9 @@ void CodeWindow::_bind_methods(){
   ClassDB::bind_method(D_METHOD("_on_code_context_menu_ready_event", "obj"), &CodeWindow::_on_code_context_menu_ready_event);
   
   ClassDB::bind_method(D_METHOD("_on_thread_initialized"), &CodeWindow::_on_thread_initialized);
+
+  ClassDB::bind_method(D_METHOD("_on_file_selected", "str", "node"), &CodeWindow::_on_file_selected);
+  ClassDB::bind_method(D_METHOD("_on_files_selected", "list", "node"), &CodeWindow::_on_files_selected);
 
   ClassDB::bind_method(D_METHOD("get_code_context_scene_path"), &CodeWindow::get_code_context_scene_path);
   ClassDB::bind_method(D_METHOD("set_code_context_scene_path", "scene"), &CodeWindow::set_code_context_scene_path);
@@ -267,6 +274,18 @@ void CodeWindow::_on_thread_initialized(){
 }
 
 
+void CodeWindow::_on_file_selected(const String& str, Node* node){
+  node->queue_free();
+  open_code_context(GDSTR_TO_STDSTR(str));
+}
+
+void CodeWindow::_on_files_selected(const PackedStringArray& list, Node* node){
+  node->queue_free();
+  for(size_t i = 0; i < list.size(); i++)
+    open_code_context(GDSTR_TO_STDSTR(list[i]));
+}
+
+
 void CodeWindow::_ready(){
   Engine* _engine = Engine::get_singleton();
   if(_engine->is_editor_hint())
@@ -274,6 +293,7 @@ void CodeWindow::_ready(){
 
   int _quit_code;
 
+{ // enclosure for using gotos
   std::string _exe_path;{
     String _tmp_str = OS::get_singleton()->get_executable_path();
     _exe_path = std::string(GDSTR_AS_PRIMITIVE(_tmp_str), _tmp_str.length());
@@ -349,6 +369,8 @@ void CodeWindow::_ready(){
   _program_handle->connect(LuaProgramHandle::s_stopping, Callable(this, "_lua_on_stopped"));
 
   _initialized = true;
+} // enclosure closing
+
   return;
 
 
@@ -396,11 +418,12 @@ std::string CodeWindow::get_current_focus_code_path() const{
 
 
 void CodeWindow::open_code_context(){
-  const char* _window_title = "Open Lua File";
-  const size_t _file_path_buffer_size = 256;
-  char* _file_path_buffer = new char[_file_path_buffer_size]; ZeroMemory(_file_path_buffer, _file_path_buffer_size);
-
 #if (_WIN64) || (_WIN32)
+  const char* _window_title = "Open Lua File";
+  std::string _file_path_str;
+  const size_t _file_path_buffer_size = 256;
+  char* _file_path_buffer = (char*)calloc(_file_path_buffer_size, 1);
+
   OPENFILENAMEA _file_config; ZeroMemory(&_file_config, sizeof(OPENFILENAMEA));
   _file_config.lStructSize = sizeof(OPENFILENAMEA);
   _file_config.lpstrFilter = "Lua File\0*.LUA;*.TXT\0Any File\0*\0";
@@ -411,12 +434,45 @@ void CodeWindow::open_code_context(){
   _file_config.Flags = OFN_DONTADDTORECENT | OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_NOLONGNAMES | OFN_NONETWORKBUTTON | OFN_NOREADONLYRETURN | OFN_PATHMUSTEXIST;
 
   bool _success = GetOpenFileNameA(&_file_config);
-#endif
+  if(_success)
+    _file_path_str = _file_path_buffer;
 
+  ::free(_file_path_buffer);
   if(!_success)
     return;
 
-  open_code_context(_file_path_buffer);
+  open_code_context(_file_path_str);
+#else
+  InstanceDatabase* _instance_db = get_node<InstanceDatabase>("/root/GlobalInstanceDatabase");
+  Ref<PackedScene> _file_dialog_pscn = _instance_db->get_instance<FileDialog>();
+  if(_file_dialog_pscn.is_null()){
+    GameUtils::Logger::print_err_static("[CodeWindow] Cannot get instance data for FileDialog.");
+    return;
+  }
+
+  Node* _file_dialog_node = _file_dialog_pscn->instantiate();
+  if(_file_dialog_node->is_class(FileDialog::get_class_static())){
+    GameUtils::Logger::print_err_static("[CodeWindow] FileDialog instance data does not have the actual object.");
+    _file_dialog_node->queue_free();
+    return;
+  }
+
+  FileDialog* _file_dialog = (FileDialog*)_file_dialog_node;
+  get_tree()->get_root()->add_child(_file_dialog);
+
+  PackedStringArray _filters_list;
+    _filters_list.push_back("*.lua,*.txt;Lua Files;text/lua");
+    _filters_list.push_back("*;Any Files;");
+
+  _file_dialog->set_filters(_filters_list);
+  _file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
+  _file_dialog->popup();
+
+  SignalOwnership _s1(Signal(_file_dialog, "file_selected"), Callable(this, "_on_file_selected").bind(_file_dialog));
+    _s1.replace_ownership();
+  SignalOwnership _s2(Signal(_file_dialog, "files_selected"), Callable(this, "_on_files_selected").bind(_file_dialog));
+    _s2.replace_ownership();
+#endif
 }
 
 void CodeWindow::open_code_context(const std::string& file_path, int flag){

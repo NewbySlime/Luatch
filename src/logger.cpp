@@ -42,18 +42,12 @@ void Logger::_bind_methods(){
 
 
 Logger::Logger(){
-#if (_WIN64) || (_WIN32)
-  _log_mutex = CreateMutex(NULL, false, NULL);
-#endif
-
   SET_LOG_VERBOSE_FUNCTION(print_log_static, print_warn_static, print_err_static);
   SET_LOG_VERBOSE_FUNCTION(print_log_static_std, print_warn_static_std, print_err_static_std);
 }
 
 Logger::~Logger(){
-#if (_WIN64) || (_WIN32)
-  CloseHandle(_log_mutex);
-#endif
+  
 }
 
 
@@ -119,33 +113,33 @@ void Logger::print_err_static_std(const std::string& err){
 
 
 void Logger::print_log(const String &log){
-  __LOCK_MUTEX(_log_mutex);
+  _object_mutex.lock();
   String _msg_info = _get_log_info(LOGGING_FLAG);
   String _msg = gd_format_str("{0}: {1}", _msg_info, log);
   UtilityFunctions::print(_msg);
 
   emit_signal(s_on_log, _msg_info, log);
-  __RELEASE_MUTEX(_log_mutex);
+  _object_mutex.unlock();
 }
 
 void Logger::print_warn(const String &warning){
-  __LOCK_MUTEX(_log_mutex);
+  _object_mutex.lock();
   String _msg_info = _get_log_info(WARNING_FLAG);
   String _msg = gd_format_str("{0}: {1}", _msg_info, warning);
   UtilityFunctions::print(_msg);
 
   emit_signal(s_on_warn_log, _msg_info, warning);
-  __RELEASE_MUTEX(_log_mutex); 
+  _object_mutex.unlock(); 
 }
 
 void Logger::print_err(const String &err){
-  __LOCK_MUTEX(_log_mutex);
+  _object_mutex.lock();
   String _msg_info = _get_log_info(ERROR_FLAG);
   String _msg = gd_format_str("{0}: {1}", _msg_info, err);
   UtilityFunctions::print(_msg);
 
   emit_signal(s_on_error_log, _msg_info, err);
-  __RELEASE_MUTEX(_log_mutex);
+  _object_mutex.unlock();
 }
 
 

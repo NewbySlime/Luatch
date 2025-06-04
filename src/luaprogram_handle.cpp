@@ -144,7 +144,7 @@ int LuaProgramHandle::_load_runtime_handler(const std::string& file_path){
 { // enclosure for using gotos
   _current_file_path = file_path;
 
-  const LibLuaHandle::function_data* _func_data = _lua_lib_data->get_function_data();
+  const LibLuaStore::function_data* _func_data = _lua_lib_data->get_function_data();
   const compilation_context* _cc = _func_data->get_cc();
   
   _runtime_handler = _cc->api_runtime->create_runtime_handler(NULL, true);
@@ -242,7 +242,7 @@ void LuaProgramHandle::_unload_runtime_handler(){
   _lock_object();
 
   if(_lua_lib_data != NULL){
-    const LibLuaHandle::function_data* _func_data = _lua_lib_data->get_function_data();
+    const LibLuaStore::function_data* _func_data = _lua_lib_data->get_function_data();
     const compilation_context* _cc = _func_data->get_cc();
 
     if(_print_override)
