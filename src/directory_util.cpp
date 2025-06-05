@@ -2,6 +2,9 @@
 
 #if (_WIN64) | (_WIN32)
 #include "Windows.h"
+#elif (__linux)
+#include "limits.h"
+#include "stdlib.h"
 #endif
 
 
@@ -28,7 +31,7 @@ void DirectoryUtil::split_directory_string(const std::string& path, std::vector<
 }
 
 std::string DirectoryUtil::get_absolute_path(const std::string& path){
-  std::string _current_dir;
+  std::string _current_dir = path;
 
 #if (_WIN64) | (_WIN32)
   DWORD _str_len = GetCurrentDirectory(NULL, 0);
@@ -38,6 +41,14 @@ std::string DirectoryUtil::get_absolute_path(const std::string& path){
     _current_dir = _cstr;
 
   free(_cstr);
+#elif (__linux)
+{ // enclosure for scoping
+  // +1 for null-termination
+  char _resolved_path[PATH_MAX+1];
+  char* _result = realpath(path.c_str(), _resolved_path);
+  if(_result)
+    _current_dir = _resolved_path;
+} // enclosure closing
 #endif
 
   std::vector<std::string> _absolute_dir_data;

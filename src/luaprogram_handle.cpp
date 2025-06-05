@@ -17,7 +17,24 @@
 #include "Lua-CPPAPI/Src/luaruntime_handler.h"
 #include "Lua-CPPAPI/Src/luavariant_arr.h"
 
+#if (__linux)
+#include "poll.h"
+#include "sys/eventfd.h"
+#include "unistd.h"
+#endif
+
+
 #define MAXIMUM_PIPE_READING_LENGTH 512
+
+#if (__linux)
+// Initialize some of the variables first:
+//  - _polling_data: pollfd
+//  - _current_counter: int64_t
+#define _RESET_EVENT(fd_object) \
+  _polling_data.fd = fd_object; \
+  if(poll(&_polling_data, 1, 0) > 0) \
+    read(fd_object, &_current_counter, 8);
+#endif
 
 
 using namespace error::util;
@@ -66,9 +83,6 @@ LuaProgramHandle::LuaProgramHandle(){
   _lua_lib_data = NULL;
 
 #if (_WIN64) || (_WIN32)
-  _obj_mutex_ptr = &_obj_mutex;
-  InitializeCriticalSection(_obj_mutex_ptr);
-
   _event_stopped = CreateEvent(NULL, TRUE, FALSE, NULL);
   _event_resumed = CreateEvent(NULL, TRUE, FALSE, NULL);
   _event_paused = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -76,12 +90,18 @@ LuaProgramHandle::LuaProgramHandle(){
   _event_read = CreateEvent(NULL, TRUE, FALSE, NULL);
 
   _event_check_signal_mutex = CreateEvent(NULL, FALSE, FALSE, NULL);
+#elif (__linux)
+  _event_stopped = eventfd(0, 0);
+  _event_resumed = eventfd(0, 0);
+  _event_paused = eventfd(0, 0);
 
-  InitializeCriticalSection(&_output_mutex);
+  _event_read = eventfd(0, 0);
+
+  _event_check_signal_mutex = eventfd(0, 0);
 #endif
 
   _event_check_keep_run_thread = true;
-  _event_check_thread = std::thread(_event_check_func, this);
+  _event_check_thread = std::thread(&LuaProgramHandle::_event_check_thread_ep, this);
 }
 
 LuaProgramHandle::~LuaProgramHandle(){
@@ -91,6 +111,9 @@ LuaProgramHandle::~LuaProgramHandle(){
   _event_check_keep_run_thread = false;
 #if (_WIN64) || (_WIN32)
   SetEvent(_event_check_signal_mutex);
+#elif (__linux)
+  int64_t _increment_counter = 1;
+  write(_event_check_signal_mutex, &_increment_counter, 8);
 #endif
   _event_check_thread.join();
 
@@ -104,10 +127,14 @@ LuaProgramHandle::~LuaProgramHandle(){
   CloseHandle(_event_read);
 
   CloseHandle(_event_check_signal_mutex);
-
-  DeleteCriticalSection(&_output_mutex);
-
-  DeleteCriticalSection(_obj_mutex_ptr);
+#elif (__linux)
+  close(_event_stopped);
+  close(_event_paused);
+  close(_event_resumed);
+  
+  close(_event_read);
+  
+  close(_event_check_signal_mutex);
 #endif
 
   _lua_lib_data = NULL;
@@ -115,15 +142,11 @@ LuaProgramHandle::~LuaProgramHandle(){
 
 
 void LuaProgramHandle::_lock_object() const{
-#if (_WIN64) || (_WIN32)
-  EnterCriticalSection(_obj_mutex_ptr);
-#endif
+  _object_mutex_ptr->lock();
 }
 
 void LuaProgramHandle::_unlock_object() const{
-#if (_WIN64) || (_WIN32)
-  LeaveCriticalSection(_obj_mutex_ptr);
-#endif
+  _object_mutex_ptr->unlock();
 }
 
 
@@ -158,7 +181,7 @@ int LuaProgramHandle::_load_runtime_handler(const std::string& file_path){
 
 #define _LOAD_RUNTIME_HANDLER_PRINT_WINDOWS_LAST_ERROR(condition) \
   if(condition){ \
-    String _err_msg = gd_format_str("[LuaProgramHandle] Cannot create Pipe for IO: %s", get_windows_error_message(GetLastError()).c_str()); \
+    String _err_msg = gd_format_str("[LuaProgramHandle] Cannot create Pipe for IO: {0}", get_windows_error_message(GetLastError()).c_str()); \
     GameUtils::Logger::print_err_static(_err_msg); \
      \
     goto on_error_label; \
@@ -169,29 +192,30 @@ int LuaProgramHandle::_load_runtime_handler(const std::string& file_path){
 
   _success = CreatePipe(&_input_pipe_output, &_input_pipe, NULL, 0);
   _LOAD_RUNTIME_HANDLER_PRINT_WINDOWS_LAST_ERROR(!_success)
+#elif (__linux)
+  _print_override->register_event_read(_event_read);
 
-  _output_reader_thread = CreateThread(
-    NULL,
-    0,
-    _output_reader_thread_ep,
-    this,
-    0,
-    NULL
-  );
+#define _CREATE_PIPE_ERROR_CHECK(pipe_address) \
+  if(pipe(pipe_address)){ \
+    GameUtils::Logger::print_err_static(gd_format_str("[LuaProgramHandle] Cannot create pipe for IO: {0}", strerror(errno))); \
+    goto on_error_label; \
+  } \
+  pipe_address##_valid = true;
 
-  _print_reader_thread = CreateThread(
-    NULL,
-    0,
-    _print_reader_thread_ep,
-    this,
-    0,
-    NULL
-  );
+  _CREATE_PIPE_ERROR_CHECK(_output_pipe)
+  _CREATE_PIPE_ERROR_CHECK(_input_pipe)
+  
+  int _output_pipe_input = _output_pipe[1];
+  int _input_pipe_output = _input_pipe[0];
+#endif
+
+  _output_reader_thread = std::thread(&LuaProgramHandle::_output_reader_thread_ep, this);
+  _print_reader_thread = std::thread(&LuaProgramHandle::_print_reader_thread_ep, this);
 
   file_handler_api_constructor_data _fconstruct_data;
     _fconstruct_data.lua_core = &_lc;
     _fconstruct_data.use_pipe = true;
-    
+
     _fconstruct_data.is_output = true;
     _fconstruct_data.pipe_handle = _output_pipe_input;
   I_file_handler* _output_fhandle = _func_data->create_file_handler(&_fconstruct_data);
@@ -211,7 +235,6 @@ int LuaProgramHandle::_load_runtime_handler(const std::string& file_path){
 
   I_io_handler* _io_handle = _func_data->create_io_handler(&_ioconstruct_data);
   _runtime_handler->get_library_loader_interface()->load_library("io", _io_handle);
-#endif
 
   if(_err_code != LUA_OK){
     string_store _str;
@@ -259,15 +282,18 @@ void LuaProgramHandle::_unload_runtime_handler(){
     }
 
     if(_output_pipe){
-      _output_pipe = NULL;
+      HANDLE _output_pipe_tmp = _output_pipe;
+      // signal the thread to stop
+      _output_pipe = NULL
+
+      // dummy read
       WriteFile(_output_pipe_input, "\0", 1, NULL, NULL);
 
-      CloseHandle(_output_pipe);
+      CloseHandle(_output_pipe_tmp);
       CloseHandle(_output_pipe_input);
       
       WaitForSingleObject(_output_reader_thread, INFINITE);
       CloseHandle(_output_reader_thread);
-      _output_reader_thread = NULL;
     }
 
     if(_print_reader_thread){
@@ -276,6 +302,32 @@ void LuaProgramHandle::_unload_runtime_handler(){
 
       WaitForSingleObject(_print_reader_thread, INFINITE);
       CloseHandle(_print_reader_thread);
+    }
+#elif (__linux)
+    if(_input_pipe_valid){
+      _input_pipe_valid = false;
+      close(_input_pipe[0]);
+      close(_input_pipe[1]);
+    }
+
+    if(_output_pipe_valid){
+      _output_pipe_valid = false;
+
+      // dummy read
+      write(_output_pipe[1], "\0", 1);
+
+      close(_output_pipe[0]);
+      close(_output_pipe[1]);
+
+      _output_reader_thread.join();
+    }
+
+    if(_print_reader_thread.joinable()){
+      _print_reader_keep_reading = false;
+      int64_t _increment_count = 1;
+      write(_event_read, &_increment_count, 8);
+
+      _print_reader_thread.join();
     }
 #endif
   }
@@ -289,7 +341,6 @@ void LuaProgramHandle::_unload_runtime_handler(){
   _input_pipe_output = NULL;
   _output_pipe = NULL;
   _output_pipe_input = NULL;
-  _print_reader_thread = NULL;
 
   // event reset just in case
   ResetEvent(_event_stopped);
@@ -297,6 +348,26 @@ void LuaProgramHandle::_unload_runtime_handler(){
   ResetEvent(_event_resumed);
   
   ResetEvent(_event_read);
+#elif (__linux)
+  _input_pipe_valid = false;
+  _output_pipe_valid = false;
+
+  pollfd _polling_data;
+    _polling_data.events = POLLIN;
+    _polling_data.revents = 0;
+
+  int64_t _current_counter;
+
+#define _RESET_EVENT(fd_object) \
+  _polling_data.fd = fd_object; \
+  if(poll(&_polling_data, 1, 0) > 0) \
+    read(fd_object, &_current_counter, 8);
+
+  // event reset just in case
+  _RESET_EVENT(_event_stopped)
+  _RESET_EVENT(_event_paused)
+  _RESET_EVENT(_event_resumed)
+  _RESET_EVENT(_event_read)
 #endif
 
   _unlock_object();
@@ -350,9 +421,21 @@ void LuaProgramHandle::_on_stopped(){
   _stop_stop_timer();
 
   // reset events
+#if (_WIN64) || (_WIN32)
   ResetEvent(_event_paused);
   ResetEvent(_event_resumed);
   ResetEvent(_event_stopped);
+#elif (__linux)
+  pollfd _polling_data;
+    _polling_data.events = POLLIN;
+    _polling_data.revents = 0;
+
+  int64_t _current_counter;
+
+  _RESET_EVENT(_event_paused)
+  _RESET_EVENT(_event_resumed)
+  _RESET_EVENT(_event_stopped)
+#endif
 
   emit_signal(s_stopping);
 
@@ -371,72 +454,110 @@ void LuaProgramHandle::_on_stopped_restart(){
 }
 
 
-void LuaProgramHandle::_event_check_func(LuaProgramHandle* _this){
+void LuaProgramHandle::_event_check_thread_ep(){
 #if (_WIN64) || (_WIN32)
-  HANDLE _handle_list[] = {_this->_event_stopped, _this->_event_resumed, _this->_event_paused, _this->_event_check_signal_mutex};
-  
-  while(_this->_event_check_keep_run_thread){
+  HANDLE _handle_list[] = {_event_stopped, _event_resumed, _event_paused, _event_check_signal_mutex};
+#elif(__linux)
+  pollfd _handle_list[] = {
+    {.fd = _event_stopped, .events = POLLIN, .revents = 0},
+    {.fd = _event_resumed, .events = POLLIN, .revents = 0},
+    {.fd = _event_paused, .events = POLLIN, .revents = 0},
+    {.fd = _event_check_signal_mutex, .events = POLLIN, .revents = 0}
+  };
+#endif
+
+  while(_event_check_keep_run_thread){
+#if (_WIN64) || (_WIN32)
     WaitForMultipleObjects(sizeof(_handle_list)/sizeof(HANDLE), _handle_list, false, INFINITE);
+#elif (__linux)
+    poll(_handle_list, sizeof(_handle_list)/sizeof(pollfd), -1);
+#endif
 
 { // enclosure for mutex scoping
-    std::lock_guard<std::mutex> _lock(_this->_event_check_mutex);
+    std::lock_guard<std::mutex> _lock(_event_check_mutex);
   
-    if(WaitForSingleObject(_this->_event_stopped, 0) == WAIT_OBJECT_0){
-      ResetEvent(_this->_event_stopped);
-      _this->_event_check_list.insert(_this->_event_check_list.end(), event_check_stopped);
+#if (_WIN64) || (_WIN32)
+    if(WaitForSingleObject(_event_stopped, 0) == WAIT_OBJECT_0){
+      ResetEvent(_event_stopped);
+      _event_check_list.push_back(event_check_stopped);
     }
     
-    if(WaitForSingleObject(_this->_event_resumed, 0) == WAIT_OBJECT_0){
-      ResetEvent(_this->_event_resumed);
-      _this->_event_check_list.insert(_this->_event_check_list.end(), event_check_resumed);
+    if(WaitForSingleObject(_event_resumed, 0) == WAIT_OBJECT_0){
+      ResetEvent(_event_resumed);
+      _event_check_list.push_back(event_check_resumed);
     }
 
-    if(WaitForSingleObject(_this->_event_paused, 0) == WAIT_OBJECT_0){
-      ResetEvent(_this->_event_paused);
-      _this->_event_check_list.insert(_this->_event_check_list.end(), event_check_paused);
+    if(WaitForSingleObject(_event_paused, 0) == WAIT_OBJECT_0){
+      ResetEvent(_event_paused);
+      _event_check_list.push_back(event_check_paused);
     }
+#elif (__linux)
+    int64_t _current_counter;
+    if(poll(&_handle_list[0], 1, 0)){
+      read(_event_stopped, &_current_counter, 8);
+      _event_check_list.push_back(event_check_stopped);
+    }
+
+    if(poll(&_handle_list[1], 1, 0)){
+      read(_event_resumed, &_current_counter, 8);
+      _event_check_list.push_back(event_check_resumed);
+    }
+
+    if(poll(&_handle_list[2], 1, 0)){
+      read(_event_paused, &_current_counter, 8);
+      _event_check_list.push_back(event_check_paused);
+    }
+#endif
 } // enclosure closing
   }
-#endif
 }
 
-
-DWORD LuaProgramHandle::_output_reader_thread_ep(LPVOID data){
-  LuaProgramHandle* _this = (LuaProgramHandle*)data;
-
+void LuaProgramHandle::_output_reader_thread_ep(){
   // +1 for null-terminating character
   char _read_buffer[MAXIMUM_PIPE_READING_LENGTH+1];
-  while(_this->_output_pipe){
-    DWORD _bytes_read = 0; ReadFile(_this->_output_pipe, _read_buffer, MAXIMUM_PIPE_READING_LENGTH, &_bytes_read, NULL);
-    _read_buffer[_bytes_read] = '\0';
-    
-    EnterCriticalSection(&_this->_output_mutex);
-    _this->_output_reading_buffer += _read_buffer;
-    LeaveCriticalSection(&_this->_output_mutex);
-  }
 
-  return 0;
+#if (_WIN64) || (_WIN32)
+  while(_output_pipe)
+#elif (__linux)
+  while(_output_pipe_valid)
+#endif
+  {
+
+#if (_WIN64) || (_WIN32)
+    DWORD _bytes_read = ReadFile(_output_pipe, _read_buffer, MAXIMUM_PIPE_READING_LENGTH, &_bytes_read, NULL);
+    _read_buffer[_bytes_read] = '\0';
+#elif(__linux)
+    ssize_t _bytes_read = read(_output_pipe[0], _read_buffer, MAXIMUM_PIPE_READING_LENGTH);
+    _read_buffer[_bytes_read] = '\0';
+#endif
+    
+    _output_mutex.lock();
+    _output_reading_buffer += _read_buffer;
+    _output_mutex.unlock();
+  }
 }
 
-DWORD LuaProgramHandle::_print_reader_thread_ep(LPVOID data){
-  LuaProgramHandle* _this = (LuaProgramHandle*)data;
-  _this->_print_reader_keep_reading = true;
+void LuaProgramHandle::_print_reader_thread_ep(){
+  _print_reader_keep_reading = true;
+  while(_print_reader_keep_reading){
+#if (_WIN64) || (_WIN32)
+    WaitForSingleObject(_event_read, INFINITE);
+    ResetEvent(_event_read);
+#elif (__linux)
+    int64_t _current_counter;
+    read(_event_read, &_current_counter, 8);
+#endif
 
-  while(_this->_print_reader_keep_reading){
-    WaitForSingleObject(_this->_event_read, INFINITE);
-    ResetEvent(_this->_event_read);
-    if(!_this->_print_reader_keep_reading)
+    if(!_print_reader_keep_reading)
       break;
 
-    EnterCriticalSection(&_this->_output_mutex);
+    _output_mutex.lock();
     gd_string_store _str;
-    _this->_print_override->read_all(&_str);
+    _print_override->read_all(&_str);
 
-    _this->_output_reading_buffer += _str.data;
-    LeaveCriticalSection(&_this->_output_mutex);
+    _output_reading_buffer += _str.data;
+    _output_mutex.unlock();
   }
-
-  return 0;
 }
 
 
@@ -507,14 +628,12 @@ void LuaProgramHandle::_process(double delta){
     }
   }
 
-#if (_WIN64) || (_WIN32)
-  EnterCriticalSection(&_output_mutex);
+  _output_mutex.lock();
   if(_output_reading_buffer.length() > 0){
     GameUtils::Logger::print_log_static(_output_reading_buffer);
     _output_reading_buffer = "";
   }
-  LeaveCriticalSection(&_output_mutex);
-#endif
+  _output_mutex.unlock();
 
   _unlock_object();
 }
@@ -531,27 +650,21 @@ void LuaProgramHandle::start_lua(const std::string& file_path){
   struct _execution_data{
     LuaProgramHandle* _this;
     const compilation_context* _cc;
-#if (_WIN64) || (_WIN32)
-    HANDLE thread_initiated_event;
-    HANDLE thread_initiated_finish_event;
-    HANDLE finished_initiating_event;
-#endif
+    std::condition_variable* thread_initiated_event;
+    std::condition_variable* thread_initiated_finish_event;
+    std::condition_variable* finished_initiating_event;
   };
 
-#if (_WIN64) || (_WIN32)
-  HANDLE _started_allow_event = CreateEvent(NULL, false, false, NULL);
-  HANDLE _started_finish_event = CreateEvent(NULL, false, false, NULL);
-  HANDLE _wait_event = CreateMutex(NULL, false, NULL);
-#endif
+  std::condition_variable _started_allow_event;
+  std::condition_variable _started_finish_event;
+  std::condition_variable _wait_event;
 
   _execution_data _data;
     _data._this = this;
     _data._cc = _lua_lib_data->get_function_data()->get_cc();
-#if (_WIN64) || (_WIN32)
-    _data.thread_initiated_event = _started_allow_event;
-    _data.thread_initiated_finish_event = _started_finish_event;
-    _data.finished_initiating_event = _wait_event;
-#endif
+    _data.thread_initiated_event = &_started_allow_event;
+    _data.thread_initiated_finish_event = &_started_finish_event;
+    _data.finished_initiating_event = &_wait_event;
 
   I_thread_control* _tcontrol = _runtime_handler->get_thread_control_interface();
   _tcontrol->run_execution([](void* data){
@@ -562,16 +675,20 @@ void LuaProgramHandle::start_lua(const std::string& file_path){
     I_thread_control* _thread_control = _d._this->_runtime_handler->get_thread_control_interface();
     I_thread_handle* _thread_handle = _d._cc->api_thread->get_thread_handle();
 
+#if (_WIN64) || (_WIN32)
     _d._this->_thread_handle = _thread_control->get_thread_handle(GetCurrentThreadId());
+#elif (__linux)
+    _d._this->_thread_handle = _thread_control->get_thread_handle(gettid());
+#endif
     _d._this->_variable_watcher = _d._cc->api_debug->create_variable_watcher(_thread_handle->get_lua_state_interface());
 
     I_execution_flow* _execution_flow = _thread_handle->get_execution_flow_interface();
 
     _d._this->_unlock_object();
-#if (_WIN64) || (_WIN32)
-    SetEvent(_d.thread_initiated_event);
-    WaitForSingleObject(_d.thread_initiated_finish_event, INFINITE);
-#endif
+    _d.thread_initiated_event->notify_all();
+    std::mutex _m;
+    std::unique_lock _ul(_m);
+    _d.thread_initiated_finish_event->wait(_ul);
     _d._this->_lock_object();
     
     if(_d._this->_blocking_on_start)
@@ -580,15 +697,16 @@ void LuaProgramHandle::start_lua(const std::string& file_path){
 #if (_WIN64) || (_WIN32)
     _execution_flow->register_event_resuming(_d._this->_event_resumed);
     _execution_flow->register_event_pausing(_d._this->_event_paused);
+#elif (__linux)
+    _execution_flow->register_event_resuming(_d._this->_event_resumed);
+    _execution_flow->register_event_pausing(_d._this->_event_paused);
 #endif
 
     const core _lc = _d._this->_runtime_handler->get_lua_core_copy();
     const I_function_var* _main_function = _d._this->_runtime_handler->get_main_function();
 
     _d._this->_unlock_object();
-#if (_WIN64) || (_WIN32)
-    SetEvent(_d.finished_initiating_event);
-#endif
+    _d.finished_initiating_event->notify_all();
 
     vararr _args, _res;
     int _err_code = _main_function->run_function(&_lc, &_args, &_res);
@@ -614,20 +732,28 @@ void LuaProgramHandle::start_lua(const std::string& file_path){
 
 #if (_WIN64) || (_WIN32)
     SetEvent(_d._this->_event_stopped);
+#elif (__linux)
+    int64_t _increment_counter = 1;
+    write(_d._this->_event_stopped, &_increment_counter, 8);
 #endif
     _d._this->_unlock_object();
   }, &_data);
 
-#if (_WIN64) || (_WIN32)
-  WaitForSingleObject(_started_allow_event, INFINITE);
-  emit_signal(s_thread_starting);
-  SetEvent(_started_finish_event);
-#endif
+{ // enclosure for scoping
+  std::mutex _m;
+  std::unique_lock _ul(_m);
+  _started_allow_event.wait(_ul);
+} // enclosure closing
 
-#if (_WIN64) || (_WIN32)
-  WaitForSingleObject(_wait_event, INFINITE);
-  CloseHandle(_wait_event);
-#endif
+  emit_signal(s_thread_starting);
+
+  _started_finish_event.notify_all();
+
+{ // enclosure for scoping
+  std::mutex _m;
+  std::unique_lock _ul(_m);
+  _wait_event.wait(_ul);
+} // enclosure closing
 
   emit_signal(s_starting);
 }
@@ -773,10 +899,14 @@ int LuaProgramHandle::get_current_running_line() const{
 
 
 void LuaProgramHandle::append_input(godot::String str){
-  if(!_input_pipe)
+  if(!is_running())
     return;
 
+#if (_WIN64) || (_WIN32)
   WriteFile(_input_pipe, GDSTR_AS_PRIMITIVE(str), str.length(), NULL, NULL);
+#elif (__linux)
+  write(_input_pipe[1], GDSTR_AS_PRIMITIVE(str), str.length());
+#endif
 }
 
 

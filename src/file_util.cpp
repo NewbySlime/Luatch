@@ -12,7 +12,12 @@
 
 
 #define TEMPORARY_FILE_NAME_LEN 32
+
+#if (_WIN64) || (_WIN32)
 #define TEMPORARY_BASE_PATH "%localappdata%\\Temp\\"
+#elif (__linux)
+#define TEMPORARY_BASE_PATH "/tmp/"
+#endif
 
 #define TEMPORARY_COPY_FILE_ITERATION_MAX 3000
 
@@ -49,6 +54,9 @@ std::string FileUtil::create_temporary_file_path(const std::string& additional_b
 }
 
 std::string FileUtil::get_temporary_base_folder(){
+  std::string _result;
+
+#if (_WIN64) || (_WIN32)
   char* _result_buffer = NULL;
   DWORD _result_len = ExpandEnvironmentStringsA(TEMPORARY_BASE_PATH, NULL, 0);
   if(!_result_len){
@@ -59,8 +67,12 @@ std::string FileUtil::get_temporary_base_folder(){
   _result_buffer = (char*)malloc(_result_len);
   _result_buffer[_result_len-1] = '\0';
   ExpandEnvironmentStringsA(TEMPORARY_BASE_PATH, _result_buffer, _result_len);
-  std::string _result = _result_buffer;
+  _result = _result_buffer;
 
   free(_result_buffer);
+#elif (__linux)
+  _result = TEMPORARY_BASE_PATH;
+#endif
+
   return _result;
 }

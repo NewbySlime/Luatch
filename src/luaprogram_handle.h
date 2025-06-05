@@ -9,6 +9,7 @@
 #include "Lua-CPPAPI/Src/lualibrary_iohandler.h"
 #include "Lua-CPPAPI/Src/luathread_control.h"
 
+#include "mutex"
 #include "thread"
 
 
@@ -54,6 +55,21 @@ class LuaProgramHandle: public godot::Node{
     int _execution_code;
     std::string _execution_err_msg;
 
+    std::recursive_mutex _object_mutex;
+    std::recursive_mutex* _object_mutex_ptr = &_object_mutex;
+
+    std::mutex _output_mutex;
+
+    std::thread _output_reader_thread;
+
+    volatile bool _print_reader_keep_reading = true;
+    std::thread _print_reader_thread;
+
+    std::thread _event_check_thread;
+    volatile bool _event_check_keep_run_thread = true;
+    std::mutex _event_check_mutex;
+    std::vector<int> _event_check_list;
+
 #if (_WIN64) || (_WIN32)
     HANDLE _event_stopped;
     HANDLE _event_paused;
@@ -63,31 +79,36 @@ class LuaProgramHandle: public godot::Node{
 
     HANDLE _event_check_signal_mutex;
 
-    bool _print_reader_keep_reading = true;
-    HANDLE _print_reader_thread = NULL;
-
-    HANDLE _output_reader_thread = NULL;
     HANDLE _output_pipe = NULL;
     HANDLE _output_pipe_input = NULL;
-    CRITICAL_SECTION _output_mutex;
 
     HANDLE _input_pipe = NULL;
     HANDLE _input_pipe_output = NULL;
+#elif (__linux)
+    // Manual reset, use poll
+    int _event_stopped;
+    // Manual reset, use poll
+    int _event_paused;
+    // Manual reset, use poll
+    int _event_resumed;
+    
+    // Manual reset, use poll
+    int _event_read;
+    
+    int _event_check_signal_mutex;
 
-    CRITICAL_SECTION* _obj_mutex_ptr;
-    CRITICAL_SECTION _obj_mutex;
+    bool _output_pipe_valid = false;
+    int _output_pipe[2];
+    bool _input_pipe_valid = false;
+    int _input_pipe[2];
 #endif
-
-    std::thread _event_check_thread;
-    bool _event_check_keep_run_thread = true;
-    std::mutex _event_check_mutex;
-    std::vector<int> _event_check_list;
 
     godot::String _output_reading_buffer;
 
     godot::Ref<godot::SceneTreeTimer> _stop_warn_timer = NULL;
     float _stop_warn_time = 3;
 
+   
     std::string _current_file_path;
 
     on_stop_callback _on_stopped_cb = NULL;
@@ -113,12 +134,9 @@ class LuaProgramHandle: public godot::Node{
 
     void _on_stopped_restart();
 
-    static void _event_check_func(LuaProgramHandle* _this);
-
-#if (_WIN64) || (_WIN32)
-    static DWORD _output_reader_thread_ep(LPVOID data);
-    static DWORD _print_reader_thread_ep(LPVOID data);
-#endif
+    void _event_check_thread_ep();
+    void _output_reader_thread_ep();
+    void _print_reader_thread_ep();
 
   protected:
     static void _bind_methods();

@@ -25,6 +25,10 @@
 #include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/variant/utility_functions.hpp"
 
+#if (_WIN64) || (_WIN32)
+#include "Windows.h"
+#endif
+
 
 using namespace gdutils;
 using namespace godot;
