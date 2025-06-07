@@ -53,6 +53,10 @@ void ApplicationMetadata::_ready(){
   ProjectSettings* _project_config = ProjectSettings::get_singleton();
   String _project_name = _project_config->get("application/config/name");
 
+#if (_WIN64) || (_WIN32)
   _reg_handle = new RegistryFileHandle("SOFTWARE\\" + GDSTR_TO_STDSTR(_project_name));
+#elif (__linux)
+  _reg_handle = new JsonFileHandle(".metadata");
+#endif
   load_data();
 }

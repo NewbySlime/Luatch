@@ -195,7 +195,7 @@ endef
 # MARK: Fn delete_objects
 # Arg 1: File to delete
 define delete_objects
-	$(DEFAULT_DEL_COMMAND) $(1)
+	-$(DEFAULT_DEL_COMMAND) $(1)
 endef
 
 

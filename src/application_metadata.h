@@ -2,6 +2,7 @@
 #define APPLICATION_METADATA_HEADER
 
 #include "persistance_node.h"
+#include "json_file_handle.h"
 #include "registry_file_handle.h"
 
 
@@ -9,7 +10,11 @@ class ApplicationMetadata: public PersistanceNode{
   GDCLASS(ApplicationMetadata, PersistanceNode)
 
   private:
+#if (_WIN64) || (_WIN32)
     RegistryFileHandle* _reg_handle = NULL;
+#elif (__linux)
+    JsonFileHandle* _reg_handle = NULL;
+#endif
 
     bool _is_loaded = false;
 

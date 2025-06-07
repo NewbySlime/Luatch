@@ -22,6 +22,8 @@ config/icon="res://resource/images/logo/ProjectLogo.png"
 [autoload]
 
 GlobalLogger="*res://scenes/autoloads/Logger.tscn"
+GlobalInstanceDatabase="*res://scenes/autoloads/instance_database.tscn"
+GlobalErrorTriggerInitializer="*res://scenes/autoloads/error_trigger_initializer.tscn"
 GlobalUserVariables="*res://scenes/autoloads/GlobalVariables.tscn"
 GlobalLibLuaHandle="*res://scenes/autoloads/LibLuaHandle.tscn"
 GlobalLuaProgramHandle="*res://scenes/autoloads/LuaProgramHandle.tscn"

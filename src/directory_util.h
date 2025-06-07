@@ -10,7 +10,9 @@ namespace DirectoryUtil{
   std::string get_absolute_path(const std::string& path);
 
   std::string strip_path(const std::string& path);
+  // Remove path and keep the filename.
   std::string strip_filename(const std::string& path);
+  std::string strip_filename_from_extension(const std::string& path);
   std::string strip_extension(const std::string& path);
 }
 

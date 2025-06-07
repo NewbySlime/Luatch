@@ -13,11 +13,14 @@
 #include "console_window.h"
 #include "counted_object_lifetime_node.h"
 #include "data_node.h"
+#include "dialog_window.h"
 #include "dynamic_scroll_container.h"
+#include "error_trigger_initializer.h"
 #include "execution_context.h"
 #include "focus_area.h"
 #include "global_variables.h"
 #include "group_invoker.h"
+#include "instance_database.h"
 #include "liblua_handle.h"
 #include "luaprogram_handle.h"
 #include "luavariable_tree.h"
@@ -58,12 +61,15 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<ConsoleWindow>();
   ClassDB::register_class<CountedObjectLifetimeNode>();
   ClassDB::register_class<DataNode>();
+  ClassDB::register_class<DialogWindow>();
   ClassDB::register_class<DynamicScrollContainer>();
+  ClassDB::register_class<ErrorTriggerInitializer>();
   ClassDB::register_class<ExecutionContext>();
   ClassDB::register_class<FocusArea>();
   ClassDB::register_class<GameUtils::Logger>();
   ClassDB::register_class<GlobalVariables>();
   ClassDB::register_class<GroupInvoker>();
+  ClassDB::register_class<InstanceDatabase>();
   ClassDB::register_class<LuaProgramHandle>();
   ClassDB::register_class<LuaVariableTree>();
   ClassDB::register_class<LibLuaHandle>();

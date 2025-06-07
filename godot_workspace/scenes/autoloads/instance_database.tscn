@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://b3m5wvpyu5wm2"]
+
+[node name="InstanceDatabase" type="InstanceDatabase"]
+database_folder = "res://scenes/instances"

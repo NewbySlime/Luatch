@@ -284,24 +284,18 @@ void LuaProgramHandle::_unload_runtime_handler(){
     if(_output_pipe){
       HANDLE _output_pipe_tmp = _output_pipe;
       // signal the thread to stop
-      _output_pipe = NULL
+      _output_pipe = NULL;
 
       // dummy read
       WriteFile(_output_pipe_input, "\0", 1, NULL, NULL);
 
       CloseHandle(_output_pipe_tmp);
       CloseHandle(_output_pipe_input);
-      
-      WaitForSingleObject(_output_reader_thread, INFINITE);
-      CloseHandle(_output_reader_thread);
     }
 
-    if(_print_reader_thread){
+    if(_print_reader_thread.joinable()){
       _print_reader_keep_reading = false;
       SetEvent(_event_read);
-
-      WaitForSingleObject(_print_reader_thread, INFINITE);
-      CloseHandle(_print_reader_thread);
     }
 #elif (__linux)
     if(_input_pipe_valid){
@@ -318,18 +312,20 @@ void LuaProgramHandle::_unload_runtime_handler(){
 
       close(_output_pipe[0]);
       close(_output_pipe[1]);
-
-      _output_reader_thread.join();
     }
 
     if(_print_reader_thread.joinable()){
       _print_reader_keep_reading = false;
       int64_t _increment_count = 1;
       write(_event_read, &_increment_count, 8);
-
-      _print_reader_thread.join();
     }
 #endif
+
+    if(_print_reader_thread.joinable())
+      _print_reader_thread.join();
+
+    if(_output_reader_thread.joinable())
+      _output_reader_thread.join();
   }
 
   _runtime_handler = NULL;

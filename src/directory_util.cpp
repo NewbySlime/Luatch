@@ -98,6 +98,10 @@ std::string DirectoryUtil::strip_filename(const std::string& path){
   return path.substr(0, path.find_last_of(_path_separator_filter));
 }
 
+std::string DirectoryUtil::strip_filename_from_extension(const std::string& path){
+  return path.substr(0, path.find_last_of(_extension_separator_filter));
+}
+
 std::string DirectoryUtil::strip_extension(const std::string& path){
   return path.substr(path.find_last_of(_extension_separator_filter));
 }

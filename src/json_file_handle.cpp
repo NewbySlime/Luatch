@@ -1,14 +1,19 @@
 #include "algorithm.h"
 #include "defines.h"
+#include "directory_util.h"
 #include "json_file_handle.h"
 #include "logger.h"
 #include "strutil.h"
 
 #include "godot_cpp/classes/file_access.hpp"
 
-#define KEY_SPECIAL_DATA_FLAG "__special_data_flag"
-#define KEY_DATA "data"
+#include "memory"
 
+
+#define KEY_DATA "___data___"
+
+
+using namespace DirectoryUtil;
 using namespace godot;
 
 
@@ -16,6 +21,23 @@ using namespace godot;
 JsonFileHandle::JsonFileHandle(const String& file_path){
   _file_path = file_path;
   refresh_data();
+}
+
+void JsonFileHandle::_get_dict_data(std::vector<std::string>& split_data, int current_idx, std::function<void(godot::Variant&)> cb, Dictionary* current_dict){
+  if(!current_dict)
+    current_dict = &_data;
+
+  String _next_key = split_data[current_idx].c_str();
+  Dictionary _next_dict = current_dict->operator[](_next_key);
+  if(current_idx != (split_data.size()-1))
+    _get_dict_data(split_data, current_idx+1, cb, &_next_dict);
+  else{
+    Variant _value_data = _next_dict[KEY_DATA];
+    cb(_value_data);
+    _next_dict[KEY_DATA] = _value_data;
+  }
+
+  current_dict->operator[](_next_key) = _next_dict;
 }
 
 
@@ -29,11 +51,26 @@ const Dictionary& JsonFileHandle::get_data() const{
 
 
 Variant JsonFileHandle::get_value(const Variant& key){
-  return _data[key];
+  std::vector<std::string> _str_array;
+  String _key_str = key.stringify();
+
+  Variant _result;
+  split_directory_string(GDSTR_TO_STDSTR(_key_str), _str_array);
+  _get_dict_data(_str_array, 0, [&](Variant& data){
+    _result = data;
+  });
+
+  return _result;
 }
 
 void JsonFileHandle::set_value(const Variant& key, const Variant& value){
-  _data[key] = value;
+  std::vector<std::string> _str_array;
+  String _key_str = key.stringify();
+
+  split_directory_string(GDSTR_TO_STDSTR(_key_str), _str_array);
+  _get_dict_data(_str_array, 0, [&](Variant& data){
+    data = value;
+  });
 }
 
 
