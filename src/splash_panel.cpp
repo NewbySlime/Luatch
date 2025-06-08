@@ -67,7 +67,6 @@ void SplashPanel::_ready(){
   if(!_reset_control_node){
     GameUtils::Logger::print_err_static("[SplashPanel] Cannot get Reset Control Node.");
     _quit_code = ERR_UNCONFIGURED;
-    
     goto skip_to_error;
   }
 
@@ -84,10 +83,11 @@ void SplashPanel::_ready(){
   return;
 
 
-  skip_to_error:{
-    trigger_generic_error_message();
-    get_tree()->quit(_quit_code);
-  }
+  skip_to_error:{}
+  SceneTree* _tree = get_tree();
+  trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void SplashPanel::_process(double delta){

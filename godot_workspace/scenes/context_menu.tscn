@@ -1,5 +1,0 @@
-[gd_scene format=3 uid="uid://ebwywer78pes"]
-
-[node name="ContextMenu" type="PopupContextMenu"]
-visible = true
-unfocusable = true

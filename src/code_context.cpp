@@ -189,7 +189,6 @@ void CodeContext::_ready(){
   _code_edit = get_node<CodeEdit>(_code_edit_path);
   if(!_code_edit){
     GameUtils::Logger::print_err_static("[CodeContext] Cannot get CodeEdit node.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -217,11 +216,11 @@ void CodeContext::_ready(){
 
   return;
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

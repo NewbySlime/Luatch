@@ -17,6 +17,7 @@
 #include "dynamic_scroll_container.h"
 #include "error_trigger_initializer.h"
 #include "execution_context.h"
+#include "file_dialog_extend.h"
 #include "focus_area.h"
 #include "global_variables.h"
 #include "group_invoker.h"
@@ -65,6 +66,7 @@ void initialize_gdextension_module(ModuleInitializationLevel p_level) {
   ClassDB::register_class<DynamicScrollContainer>();
   ClassDB::register_class<ErrorTriggerInitializer>();
   ClassDB::register_class<ExecutionContext>();
+  ClassDB::register_class<FileDialogExtend>();
   ClassDB::register_class<FocusArea>();
   ClassDB::register_class<GameUtils::Logger>();
   ClassDB::register_class<GlobalVariables>();

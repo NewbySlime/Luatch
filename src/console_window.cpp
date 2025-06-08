@@ -203,7 +203,6 @@ void ConsoleWindow::_ready(){
   _program_handle = get_node<LuaProgramHandle>("/root/GlobalLuaProgramHandle");
   if(!_program_handle){
     GameUtils::Logger::print_err_static("[ConsoleWindow] Cannot get Program Handle for Lua.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -211,7 +210,6 @@ void ConsoleWindow::_ready(){
   _output_text = get_node<RichTextLabel>(_output_text_path);
   if(!_output_text){
     GameUtils::Logger::print_err_static("[ConsoleWindow] Cannot get TextEdit for Console Output.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -219,7 +217,6 @@ void ConsoleWindow::_ready(){
   _input_text = get_node<LineEdit>(_input_text_path);
   if(!_input_text){
     GameUtils::Logger::print_err_static("[ConsoleWindow] Cannot get LineEdit for Console Input.");
-    
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -246,11 +243,11 @@ void ConsoleWindow::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void ConsoleWindow::_process(double delta){

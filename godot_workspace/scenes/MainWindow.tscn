@@ -1,0 +1,873 @@
+[gd_scene load_steps=40 format=3 uid="uid://cgjecodaf2s77"]
+
+[ext_resource type="PackedScene" uid="uid://bbpgcr0g21epu" path="res://scenes/clone/CodeContext.tscn" id="1_b2mtp"]
+[ext_resource type="SystemFont" uid="uid://c8jm14y54ky2t" path="res://resource/styles/text/code_font.tres" id="1_n2lrs"]
+[ext_resource type="PackedScene" uid="uid://bjrfnaiwj0xc7" path="res://scenes/clone/Button.tscn" id="2_thhei"]
+[ext_resource type="Texture2D" uid="uid://weay00pp8h3g" path="res://resource/images/logo/RunLogo.png" id="3_62uea"]
+[ext_resource type="Texture2D" uid="uid://ck5adtau1uy1h" path="res://resource/images/logo/OpenLogo.png" id="4_t1ptk"]
+[ext_resource type="Texture2D" uid="uid://bdawqmxglaexi" path="res://resource/images/logo/CloseLogo.png" id="5_1pc77"]
+[ext_resource type="Texture2D" uid="uid://df8culy4t0ymo" path="res://resource/images/logo/ResumeLogo.png" id="6_nj6ib"]
+[ext_resource type="Texture2D" uid="uid://bedvwtljn3b1p" path="res://resource/images/logo/SaveLogo.png" id="7_8hkqq"]
+[ext_resource type="Texture2D" uid="uid://c2mbns6wbw0gx" path="res://resource/images/logo/PauseLogo.png" id="7_e624x"]
+[ext_resource type="Texture2D" uid="uid://cxyb3gf2vj7yi" path="res://resource/images/logo/StepInLogo.png" id="8_4qto1"]
+[ext_resource type="Texture2D" uid="uid://oldsxscq85dk" path="res://resource/images/logo/StepOutLogo.png" id="9_3d8kr"]
+[ext_resource type="Texture2D" uid="uid://dtlb5xa15xrtr" path="res://resource/images/logo/StepOverLogo.png" id="10_gesx8"]
+[ext_resource type="Texture2D" uid="uid://y5rx4xwwk3ng" path="res://resource/images/logo/StopLogo.png" id="11_qgwsp"]
+[ext_resource type="Texture2D" uid="uid://b6ymps4xmwpr0" path="res://resource/images/logo/RestartLogo.png" id="12_ifwq8"]
+[ext_resource type="Texture2D" uid="uid://df7qxoobafca8" path="res://resource/images/logo/SettingsLogo.png" id="14_dify4"]
+[ext_resource type="Texture2D" uid="uid://bvrouncobb0s0" path="res://resource/images/logo/ThreeHorizontalDot-32px-32px.png" id="14_elorr"]
+[ext_resource type="FontFile" uid="uid://rrk4cxfo1ek6" path="res://resource/fonts/SourceCodePro/static/SourceCodePro-Light.ttf" id="14_yx8cj"]
+[ext_resource type="Texture2D" uid="uid://d060ofcipcuyv" path="res://resource/images/logo/SettingsBackLogo.png" id="15_o08uj"]
+[ext_resource type="Texture2D" uid="uid://bk8p8iug1ky0r" path="res://resource/images/logo/DisconnectLogo-32px-32px.png" id="15_ppo5v"]
+[ext_resource type="FontFile" uid="uid://cnhf3i2ofscsa" path="res://resource/fonts/SourceCodePro/static/SourceCodePro-Medium.ttf" id="16_kr13r"]
+[ext_resource type="Texture2D" uid="uid://cmht7r1hiw5v0" path="res://icon.svg" id="17_sxuvq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1wdwd"]
+bg_color = Color(0.113379, 0.195545, 0.293532, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iv52k"]
+bg_color = Color(0.0923971, 0.0923971, 0.0923971, 1)
+border_width_left = 2
+border_color = Color(0.0338533, 0.0338533, 0.0338532, 1)
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_isque"]
+bg_color = Color(0.133196, 0.133196, 0.133196, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ha21p"]
+bg_color = Color(0.0807833, 0.0807834, 0.0807833, 1)
+border_width_bottom = 3
+border_color = Color(0, 0, 0, 1)
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j6ujq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0rdsd"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+border_width_bottom = 5
+border_color = Color(0, 0.0252953, 0.0821214, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8kcb2"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+border_width_left = 2
+border_width_bottom = 2
+border_color = Color(0.686275, 0.686275, 0.686275, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i7luo"]
+bg_color = Color(0.18359, 0.18359, 0.18359, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mfhn1"]
+bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_npbu6"]
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
+[sub_resource type="Animation" id="Animation_mm0tu"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:slide_value")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../../UnfocusArea:ignore_focus")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_1mtd0"]
+resource_name = "slide_animation"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:slide_value")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(0.2, 0.2),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../../UnfocusArea:ignore_focus")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="Animation" id="Animation_ww3hp"]
+resource_name = "slide_animation_hide"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:slide_value")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(0.2, 0.2),
+"update": 0,
+"values": [1.0, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("../../UnfocusArea:ignore_focus")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1y4wo"]
+_data = {
+"RESET": SubResource("Animation_mm0tu"),
+"slide_animation": SubResource("Animation_1mtd0"),
+"slide_animation_hide": SubResource("Animation_ww3hp")
+}
+
+[sub_resource type="Animation" id="Animation_w7a1u"]
+resource_name = "PanOutAnimation"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SlideAnimationControl:slide_value")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(-0.0333333, 1),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [1.0, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_kqy4l"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SlideAnimationControl:slide_value")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_2h7ak"]
+_data = {
+"PanOutAnimation": SubResource("Animation_w7a1u"),
+"RESET": SubResource("Animation_kqy4l")
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_eswy0"]
+bg_color = Color(0.176419, 0.176419, 0.176419, 1)
+border_width_left = 3
+border_color = Color(0.351563, 0.351563, 0.351563, 1)
+corner_radius_top_left = 8
+corner_radius_bottom_left = 8
+
+[node name="MainNode" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UIControl" type="UIControl" parent="."]
+target_min_size_node = NodePath("..")
+
+[node name="GroupInvoker" type="GroupInvoker" parent="UIControl"]
+group_node_data = {
+"code_window_group": [NodePath("../../VSplitContainer/HSplitContainer/CodeWindow")],
+"console_window_group": [NodePath("../../VSplitContainer/ConsoleWindow")],
+"inspector_group": [NodePath("../../VSplitContainer/HSplitContainer/InspectWindowContainer")]
+}
+recursive_invoke = true
+
+[node name="SplitRatioMaintainer" type="SplitRatioMaintainer" parent="."]
+target_object_list = [NodePath("../VSplitContainer"), NodePath("../VSplitContainer/HSplitContainer")]
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1wdwd")
+
+[node name="VSplitContainer" type="VSplitContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+theme_override_constants/autohide = 0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VSplitContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+theme_override_constants/separation = 0
+theme_override_constants/autohide = 0
+split_offset = 444
+
+[node name="CodeWindow" type="HBoxContainer" parent="VSplitContainer/HSplitContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Grouping" type="Control" parent="VSplitContainer/HSplitContainer/CodeWindow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlaceholderLabel" type="Label" parent="VSplitContainer/HSplitContainer/CodeWindow/Grouping"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -69.0
+offset_top = -11.5
+offset_right = 69.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Open File To Start"
+
+[node name="TabContainer" type="CodeWindow" parent="VSplitContainer/HSplitContainer/CodeWindow/Grouping"]
+code_context_scene = "res://scenes/clone/CodeContext.tscn"
+context_menu_path = NodePath("../../BackgroundContainer/MenuControl")
+physics_interpolation_mode = 0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+current_tab = 0
+
+[node name="CodeContext" parent="VSplitContainer/HSplitContainer/CodeWindow/Grouping/TabContainer" instance=ExtResource("1_b2mtp")]
+physics_interpolation_mode = 0
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="BackgroundContainer" type="MarginContainer" parent="VSplitContainer/HSplitContainer/CodeWindow"]
+layout_mode = 2
+theme_override_constants/margin_top = 35
+
+[node name="MenuControl" type="CodeContextMenu" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer"]
+button_container_path = NodePath("../AreaMargin/ContextMenu")
+physics_interpolation_mode = 0
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_iv52k")
+
+[node name="AreaMargin" type="MarginContainer" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 12
+
+[node name="ContextMenu" type="VBoxContainer" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ButtonRun" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+tooltip_text = "Run this Lua code."
+icon = ExtResource("3_62uea")
+
+[node name="ButtonOpen" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+tooltip_text = "Open another Lua code."
+icon = ExtResource("4_t1ptk")
+
+[node name="ButtonClose" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+tooltip_text = "Close this Lua code."
+icon = ExtResource("5_1pc77")
+
+[node name="ButtonRefresh" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+tooltip_text = "Refresh the file."
+icon = ExtResource("12_ifwq8")
+
+[node name="ButtonSave" parent="VSplitContainer/HSplitContainer/CodeWindow/BackgroundContainer/AreaMargin/ContextMenu" instance=ExtResource("2_thhei")]
+layout_mode = 2
+tooltip_text = "Save current file."
+icon = ExtResource("7_8hkqq")
+
+[node name="InspectWindowContainer" type="Control" parent="VSplitContainer/HSplitContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/HSplitContainer/InspectWindowContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_isque")
+
+[node name="InspectWindow" type="VBoxContainer" parent="VSplitContainer/HSplitContainer/InspectWindowContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CodeFlowControlContainer" type="CodeFlowControl" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow"]
+control_button_container_path = NodePath("HBoxContainer")
+physics_interpolation_mode = 0
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_right = 150.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ha21p")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer"]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_right = 150.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ButtonResume" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Resume Lua code."
+icon = ExtResource("6_nj6ib")
+
+[node name="ButtonPause" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Pause Lua code."
+icon = ExtResource("7_e624x")
+
+[node name="ButtonStepIn" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Step into Lua function."
+icon = ExtResource("8_4qto1")
+
+[node name="ButtonStepOut" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Step outside current function."
+icon = ExtResource("9_3d8kr")
+
+[node name="ButtonStepOver" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Step over a line."
+icon = ExtResource("10_gesx8")
+
+[node name="ButtonStop" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Stop current Lua run."
+icon = ExtResource("11_qgwsp")
+
+[node name="ButtonRestart" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/CodeFlowControlContainer/HBoxContainer" instance=ExtResource("2_thhei")]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Restart this code."
+icon = ExtResource("12_ifwq8")
+
+[node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 8
+
+[node name="TabContainer" type="TabContainer" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Variable Inspector" type="VariableWatcher" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer"]
+variable_storage_path = NodePath("../Variable Storage")
+variable_tree_path = NodePath("VariableTree")
+context_menu_button_texture = ExtResource("14_elorr")
+physics_interpolation_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+metadata/_tab_index = 0
+
+[node name="GroupInvoker" type="GroupInvoker" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Inspector"]
+group_node_data = {
+"placeholder_node": [NodePath("../Label")]
+}
+
+[node name="VariableTree" type="Tree" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Inspector"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("14_yx8cj")
+allow_rmb_select = true
+
+[node name="Label" type="Label" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Inspector"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.497474, 0.497474, 0.497474, 1)
+text = "Run Lua To Use Inspector"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Variable Storage" type="VariableStorage" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer"]
+variable_watcher_path = NodePath("../Variable Inspector")
+disable_auto_import_logo = ExtResource("15_ppo5v")
+variable_tree_path = NodePath("VariableTree")
+context_menu_button_texture = ExtResource("14_elorr")
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="GroupInvoker" type="GroupInvoker" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Storage"]
+group_node_data = {
+"placeholder_node": [NodePath("../Label")]
+}
+
+[node name="VariableTree" type="Tree" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Storage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("14_yx8cj")
+allow_rmb_select = true
+
+[node name="Label" type="Label" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/MarginContainer/TabContainer/Variable Storage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.497474, 0.497474, 0.497474, 1)
+text = "Store Variable Here"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ExecutionContextContainer" type="ExecutionContext" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow"]
+execution_info_path = NodePath("MarginContainer/ExecutionContext")
+physics_interpolation_mode = 0
+modulate = Color(0.633757, 0.633757, 0.633757, 1)
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/ExecutionContextContainer"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/ExecutionContextContainer"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+
+[node name="ExecutionContext" type="Label" parent="VSplitContainer/HSplitContainer/InspectWindowContainer/InspectWindow/ExecutionContextContainer/MarginContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_n2lrs")
+theme_override_font_sizes/font_size = 14
+text = "Function _test | Line 21"
+vertical_alignment = 1
+
+[node name="ConsoleWindow" type="ConsoleWindow" parent="VSplitContainer"]
+output_text_path = NodePath("VBoxContainer/ConsoleMargin/RichTextLabel")
+input_text_path = NodePath("VBoxContainer/InputMargin/HBoxContainer/InputText")
+log_color = Color(0.753984, 0.753984, 0.753984, 1)
+warn_color = Color(0.902972, 0.655383, 3.85046e-07, 1)
+err_color = Color(0.925218, 0, 0.0756133, 1)
+placeholder_text = "Console Log Here"
+physics_interpolation_mode = 0
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="Panel" type="Panel" parent="VSplitContainer/ConsoleWindow"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/ConsoleWindow"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ConsoleMargin" type="MarginContainer" parent="VSplitContainer/ConsoleWindow/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+
+[node name="RichTextLabel" type="RichTextLabel" parent="VSplitContainer/ConsoleWindow/VBoxContainer/ConsoleMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_fonts/normal_font = ExtResource("16_kr13r")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_j6ujq")
+bbcode_enabled = true
+autowrap_mode = 2
+
+[node name="InputMargin" type="MarginContainer" parent="VSplitContainer/ConsoleWindow/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/ConsoleWindow/VBoxContainer/InputMargin"]
+layout_mode = 2
+
+[node name="InputIndicator" type="Label" parent="VSplitContainer/ConsoleWindow/VBoxContainer/InputMargin/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_n2lrs")
+text = ">"
+
+[node name="InputText" type="LineEdit" parent="VSplitContainer/ConsoleWindow/VBoxContainer/InputMargin/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("14_yx8cj")
+placeholder_text = "Input here"
+
+[node name="SettingsArea" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="UnfocusArea" type="FocusArea" parent="SettingsArea"]
+ignore_focus = true
+physics_interpolation_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+scale = Vector2(1e-05, 1e-05)
+
+[node name="OptionControl" type="OptionControl" parent="SettingsArea"]
+settings_logo = ExtResource("14_dify4")
+close_logo = ExtResource("15_o08uj")
+animation_player = NodePath("../SettingPanel/AnimationPlayer")
+settings_button = NodePath("../SettingPanel/BackgroundPanel/ButtonPanel/MarginContainer/Button")
+settings_unfocus_area = NodePath("../UnfocusArea")
+option_control = NodePath("../SettingPanel/BackgroundPanel")
+
+[node name="SettingPanel" type="Control" parent="SettingsArea"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="BackgroundPanel" type="Panel" parent="SettingsArea/SettingPanel"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_right = 500.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_0rdsd")
+
+[node name="ButtonPanel" type="Panel" parent="SettingsArea/SettingPanel/BackgroundPanel"]
+layout_mode = 1
+offset_left = -40.0
+offset_bottom = 40.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_8kcb2")
+
+[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/ButtonPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Button" type="Button" parent="SettingsArea/SettingPanel/BackgroundPanel/ButtonPanel/MarginContainer"]
+layout_mode = 2
+theme_override_styles/hover = SubResource("StyleBoxFlat_i7luo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_mfhn1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_npbu6")
+icon = ExtResource("14_dify4")
+icon_alignment = 1
+expand_icon = true
+
+[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+mouse_filter = 0
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 60
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Option Menu"
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="IgnoreInternalDataOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "ignore_internal_data"
+physics_interpolation_mode = 0
+custom_minimum_size = Vector2(44, 24)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_n2lrs")
+text = "Ignore Internal Data"
+
+[node name="CheckButton" type="CheckButton" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/IgnoreInternalDataOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="CodeWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "code_window_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Code Window Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/CodeWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 80.0
+value = 1.0
+suffix = "px"
+
+[node name="InspectorFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "inspector_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Inspector Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/InspectorFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 80.0
+value = 1.0
+suffix = "px"
+
+[node name="ConsoleWindowFontOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "console_window_font"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Console Window Font"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/ConsoleWindowFontOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 80.0
+value = 1.0
+suffix = "px"
+
+[node name="UIScaleOVC" type="OptionValueControl" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+option_key = "ui_scale"
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UI Scale"
+
+[node name="SpinBox" type="SpinBox" parent="SettingsArea/SettingPanel/BackgroundPanel/MarginContainer/VBoxContainer/ScrollContainer/VBoxContainer/UIScaleOVC/HBoxContainer"]
+layout_mode = 2
+min_value = 40.0
+max_value = 200.0
+value = 40.0
+suffix = "%"
+
+[node name="OptionListMenu" type="OptionListMenu" parent="SettingsArea/SettingPanel/BackgroundPanel"]
+target_list_node = NodePath("../MarginContainer")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="SettingsArea/SettingPanel"]
+root_node = NodePath("../SlideAnimationControl")
+libraries = {
+"": SubResource("AnimationLibrary_1y4wo")
+}
+
+[node name="SlideAnimationControl" type="SlideAnimationControl" parent="SettingsArea/SettingPanel"]
+target_node = NodePath("../BackgroundPanel")
+slide_direction = 3
+
+[node name="SplashPanel" type="SplashPanel" parent="."]
+reset_control_node_path = NodePath("Panel")
+physics_interpolation_mode = 0
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="SlideAnimationControl" type="SlideAnimationControl" parent="SplashPanel"]
+slide_value = 1.0
+target_node = NodePath("../Panel")
+slide_direction = 3
+slide_pivot = 3
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="SplashPanel"]
+libraries = {
+"": SubResource("AnimationLibrary_2h7ak")
+}
+
+[node name="Panel" type="Panel" parent="SplashPanel"]
+custom_minimum_size = Vector2(240, 64)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -64.0
+offset_right = 240.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_eswy0")
+
+[node name="MarginContainer" type="MarginContainer" parent="SplashPanel/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SplashPanel/Panel/MarginContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="SplashPanel/Panel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Made With Godot"
+
+[node name="TextureRect" type="TextureRect" parent="SplashPanel/Panel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("17_sxuvq")
+expand_mode = 2

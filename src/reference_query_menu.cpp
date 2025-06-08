@@ -144,7 +144,6 @@ void ReferenceQueryMenu::_ready(){
   _label_page_info = get_node<Label>(_label_page_info_path);
   if(!_label_page_info){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get label for page info.");
-    
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -152,7 +151,6 @@ void ReferenceQueryMenu::_ready(){
   _first_button = get_node<Button>(_first_button_path);
   if(!_first_button){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get 'first' button.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -160,7 +158,6 @@ void ReferenceQueryMenu::_ready(){
   _before_button = get_node<Button>(_before_button_path);
   if(!_before_button){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get 'before' button.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -168,7 +165,6 @@ void ReferenceQueryMenu::_ready(){
   _next_button = get_node<Button>(_next_button_path);
   if(!_next_button){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get 'next' button.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -176,7 +172,6 @@ void ReferenceQueryMenu::_ready(){
   _last_button = get_node<Button>(_last_button_path);
   if(!_last_button){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get 'last' button.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -184,7 +179,6 @@ void ReferenceQueryMenu::_ready(){
   _content_preview_pivot = get_node<Node>(_content_preview_pivot_path);
   if(!_content_preview_pivot){
     GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Cannot get pivot for Content Preview.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   } 
@@ -194,7 +188,6 @@ void ReferenceQueryMenu::_ready(){
     Node* _test_node = _content_preview_pckscene->instantiate();
     if(!_test_node){
       GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Content Preview PackedScene is not a valid PackedScene.");
-
       _quit_code = ERR_UNCONFIGURED;
       goto on_error;
     }
@@ -202,7 +195,6 @@ void ReferenceQueryMenu::_ready(){
     Node* _group_invoker = get_any_node<GroupInvoker>(_test_node);
     if(!_group_invoker){
       GameUtils::Logger::print_err_static("[ReferenceQueryMenu] Content preview object does not have a GroupInvoker child.");
-
       _quit_code = ERR_UNCONFIGURED;
       goto on_error;
     }
@@ -219,10 +211,11 @@ void ReferenceQueryMenu::_ready(){
   return;
 
 
-  on_error:{
-    trigger_generic_error_message();
-    get_tree()->quit(_quit_code);
-  }
+  on_error:{}
+  SceneTree* _tree = get_tree();
+  trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

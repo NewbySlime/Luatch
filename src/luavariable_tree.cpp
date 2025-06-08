@@ -1787,7 +1787,6 @@ void LuaVariableTree::_ready(){
   _variable_tree = get_node<Tree>(_variable_tree_path);
   if(!_variable_tree){
     GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get Tree for Variable Inspector.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -1795,7 +1794,6 @@ void LuaVariableTree::_ready(){
   _gvariables = get_node<GlobalVariables>(GlobalVariables::singleton_path);
   if(!_gvariables){
     GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get GlobalVariables.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -1803,7 +1801,6 @@ void LuaVariableTree::_ready(){
   LibLuaHandle* _lib_handle = get_node<LibLuaHandle>("/root/GlobalLibLuaHandle");
   if(!_lib_handle){
     GameUtils::Logger::print_err_static("[LuaVariableTree] Cannot get Global Lua Library Handle object.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -1839,11 +1836,11 @@ void LuaVariableTree::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  }
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void LuaVariableTree::_process(double delta){

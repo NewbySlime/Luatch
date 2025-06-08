@@ -125,21 +125,10 @@ void DialogWindow::_ready(){
   if(_engine->is_editor_hint())
     return;
 
-  int _quit_code;
-
-{ // enclosure for using gotos
   connect("child_order_changed", Callable(this, "_on_child_order_changed"));
   connect("about_to_popup", Callable(this, "_on_popup"));
 
   _update_pivot_node();
-} // enclosure closing
-
-  return; 
-
-
-  on_error:{}
-  trigger_generic_error_message();
-  get_tree()->quit(_quit_code);
 }
 
 

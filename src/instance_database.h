@@ -1,7 +1,3 @@
-// TODO
-//  [ ] Database of PackedScene for certain class
-//  [ ] This should be stored inside a folder, each PackedScene name represents the key.
-
 #ifndef INSTANCE_DATABASE_HEADER
 #define INSTANCE_DATABASE_HEADER
 

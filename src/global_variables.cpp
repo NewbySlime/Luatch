@@ -28,7 +28,6 @@ const char* GlobalVariables::s_global_value_set = "value_set";
 const char* GlobalVariables::key_context_menu_path = "global_context_menu_path";
 const char* GlobalVariables::key_popup_variable_setter_path = "global_popup_variable_setter_path";
 const char* GlobalVariables::key_confirmation_dialog_path = "global_confirmation_dialog_path";
-const char* GlobalVariables::key_timer_scene = "timer_scene";
 const char* GlobalVariables::key_temporary_base_path = "temporary_base_path";
 
 
@@ -77,24 +76,6 @@ void GlobalVariables::_check_variable_data(bool as_warning){
 } // enclosure closing
 
 { // enclosure for scoping
-  Ref<PackedScene> _test_pck_scene = get_global_value(key_timer_scene);
-  if(_test_pck_scene.is_null()){
-    log_func(gd_format_str("[GlobalVariables] '{0}' key is not a valid PackedScene.", key_timer_scene));
-    _failed = true;
-    goto skip_checking;
-  }
-
-  godot::Node* _test_node = _test_pck_scene->instantiate();
-  if(!_test_node->is_class(Timer::get_class_static())){
-    log_func("[GlobalVariables] Timer Scene is not a Timer object.");
-    _failed = true;
-    goto skip_checking;
-  }
-
-  _test_node->queue_free();
-} // enclosure closing
-
-{ // enclosure for scoping
   String _base_path = get_global_value(key_temporary_base_path);
   String _temporary_path = String(get_temporary_base_folder().c_str()) + _base_path;
   if(!DirAccess::dir_exists_absolute(_temporary_path)){
@@ -110,8 +91,10 @@ void GlobalVariables::_check_variable_data(bool as_warning){
   skip_checking:{}
 
   if(_failed && !as_warning){
-    trigger_generic_error_message();
-    get_tree()->quit(ERR_UNCONFIGURED);
+    SceneTree* _tree = get_tree();
+    trigger_generic_error_message([_tree](){
+      _tree->quit(ERR_UNCONFIGURED);
+    });
   }
 }
 

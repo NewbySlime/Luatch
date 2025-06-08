@@ -330,7 +330,6 @@ void VariableWatcher::_ready(){
   _lua_lib = get_node<LibLuaHandle>("/root/GlobalLibLuaHandle");
   if(!_lua_lib){
     GameUtils::Logger::print_err_static("[VariableWatcher] Cannot get Library Handle for Lua.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -338,7 +337,6 @@ void VariableWatcher::_ready(){
   _lua_program_handle = get_node<LuaProgramHandle>("/root/GlobalLuaProgramHandle");
   if(!_lua_program_handle){
     GameUtils::Logger::print_err_static("[VariableWatcher] Cannot get Program Handle for Lua.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -346,7 +344,6 @@ void VariableWatcher::_ready(){
   _vstorage = get_node<VariableStorage>(_vstorage_node_path);
   if(!_vstorage){
     GameUtils::Logger::print_err_static("[VariableWatcher] Cannot get Variable Storage.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -374,11 +371,11 @@ void VariableWatcher::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  }
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

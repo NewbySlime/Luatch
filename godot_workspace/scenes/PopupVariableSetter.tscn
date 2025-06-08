@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://cp50gbm7pm6et"]
+
+[ext_resource type="PackedScene" uid="uid://dwyokcxe5rwmk" path="res://scenes/PopupVariableSetterBase.tscn" id="1_ohqsc"]
+
+[node name="PopupMenu" type="PopupVariableSetter"]
+control_node = NodePath("PopupMenuControl")
+initial_position = 1
+size = Vector2i(336, 100)
+visible = true
+
+[node name="PopupMenuControl" parent="." instance=ExtResource("1_ohqsc")]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 332.0
+offset_bottom = 96.0
+size_flags_horizontal = 0
+size_flags_vertical = 0

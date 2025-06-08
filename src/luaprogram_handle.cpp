@@ -567,7 +567,6 @@ void LuaProgramHandle::_ready(){
   _lua_lib = get_node<LibLuaHandle>("/root/GlobalLibLuaHandle");
   if(!_lua_lib){
     GameUtils::Logger::print_err_static("[LuaProgramHandle] Cannot get LibLuaHandle for library information.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -575,11 +574,11 @@ void LuaProgramHandle::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void LuaProgramHandle::_process(double delta){

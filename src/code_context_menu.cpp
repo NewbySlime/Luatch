@@ -97,7 +97,6 @@ void CodeContextMenu::_ready(){
   _button_container = get_node<Node>(_button_container_path);
   if(!_button_container){
     GameUtils::Logger::print_err_static("[CodeContextMenu] Cannot get specified node for Button Container.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -106,7 +105,6 @@ void CodeContextMenu::_ready(){
   variable = _button_container->get_node<Button>(name); \
   if(!variable){ \
     GameUtils::Logger::print_err_static("[CodeContextMenu] Cannot get '" name "' button in Button Container."); \
-     \
     _quit_code = ERR_UNCONFIGURED; \
     goto on_error_label; \
   }
@@ -128,11 +126,11 @@ void CodeContextMenu::_ready(){
   emit_signal(SIGNAL_ON_READY, this);
   return;
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

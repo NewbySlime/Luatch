@@ -93,7 +93,6 @@ void ExecutionContext::_ready(){
   _program_handle = get_node<LuaProgramHandle>("/root/GlobalLuaProgramHandle");
   if(!_program_handle){
     GameUtils::Logger::print_err_static("[ExecutionContext] Cannot get LuaProgramHandle node.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -101,7 +100,6 @@ void ExecutionContext::_ready(){
   _execution_info = get_node<Label>(_execution_info_path);
   if(!_execution_info){
     GameUtils::Logger::print_err_static("[ExecutionContext] Cannot get Execution Info label.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -116,11 +114,11 @@ void ExecutionContext::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

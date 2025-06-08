@@ -185,7 +185,6 @@ void OptionValueControl::_ready(){
   _option_control_node = _find_control_node(this);
   if(!_option_control_node){
     GameUtils::Logger::print_err_static("[OptionValueControl] Cannot get Option control Node.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error;
   }
@@ -214,7 +213,6 @@ void OptionValueControl::_ready(){
 
     break; case base_class_Nil:{
       GameUtils::Logger::print_err_static("[OptionValueControl] Fetched Option control Node is not a supported type.");
-
       _quit_code = ERR_UNCONFIGURED;
       goto on_error;
     }
@@ -226,11 +224,11 @@ void OptionValueControl::_ready(){
   return;
 
 
-  on_error:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void OptionValueControl::_process(double delta){

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://b44ttp4snlubx"]
+
+[node name="FileDialogExtend" type="FileDialogExtend"]
+title = "Open File(s)"
+initial_position = 2
+size = Vector2i(500, 300)
+visible = true
+ok_button_text = "Open"
+file_mode = 1
+access = 2

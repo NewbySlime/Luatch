@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Luatch"
 config/version="0.4.0"
-run/main_scene="res://scenes/main_window.tscn"
+run/main_scene="res://scenes/MainWindow.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 run/max_fps=60
 run/low_processor_mode=true
@@ -22,8 +22,8 @@ config/icon="res://resource/images/logo/ProjectLogo.png"
 [autoload]
 
 GlobalLogger="*res://scenes/autoloads/Logger.tscn"
-GlobalInstanceDatabase="*res://scenes/autoloads/instance_database.tscn"
-GlobalErrorTriggerInitializer="*res://scenes/autoloads/error_trigger_initializer.tscn"
+GlobalInstanceDatabase="*res://scenes/autoloads/InstanceDatabase.tscn"
+GlobalErrorTriggerInitializer="*res://scenes/autoloads/ErrorTriggerInitializer.tscn"
 GlobalUserVariables="*res://scenes/autoloads/GlobalVariables.tscn"
 GlobalLibLuaHandle="*res://scenes/autoloads/LibLuaHandle.tscn"
 GlobalLuaProgramHandle="*res://scenes/autoloads/LuaProgramHandle.tscn"

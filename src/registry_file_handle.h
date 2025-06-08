@@ -1,3 +1,7 @@
+// TODO
+//  [ ] Use path based tree like structure
+//  [ ] Move the implementation used in JsonFileHandle as TreePersistanceHandle, then reuse that class. 
+
 #if (_WIN64) || (_WIN32)
 #ifndef REGISTTRY_FILE_HANDLE_HEADER
 #define REGISTTRY_FILE_HANDLE_HEADER

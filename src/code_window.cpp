@@ -4,6 +4,7 @@
 #include "common_event.h"
 #include "directory_util.h"
 #include "error_trigger.h"
+#include "file_dialog_extend.h"
 #include "global_variables.h"
 #include "instance_database.h"
 #include "logger.h"
@@ -16,7 +17,6 @@
 
 #include "godot_cpp/classes/dir_access.hpp"
 #include "godot_cpp/classes/engine.hpp"
-#include "godot_cpp/classes/file_dialog.hpp"
 #include "godot_cpp/classes/os.hpp"
 #include "godot_cpp/classes/project_settings.hpp"
 #include "godot_cpp/classes/resource_loader.hpp"
@@ -308,7 +308,6 @@ void CodeWindow::_ready(){
   _program_handle = get_node<LuaProgramHandle>("/root/GlobalLuaProgramHandle");
   if(!_program_handle){
     GameUtils::Logger::print_err_static("[CodeWindow] Cannot get Node for Program Handle for Lua.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -316,7 +315,6 @@ void CodeWindow::_ready(){
   _context_menu_node = get_node<CodeContextMenu>(_context_menu_path);
   if(!_context_menu_node){
     GameUtils::Logger::print_err_static("[CodeWindow] Cannot get Node for Context Menu.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -324,7 +322,6 @@ void CodeWindow::_ready(){
   GlobalVariables* _gvariables = get_node<GlobalVariables>("/root/GlobalUserVariables");
   if(!_gvariables){
     GameUtils::Logger::print_err_static("[CodeWindow] Cannot get Global Variables.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -336,7 +333,6 @@ void CodeWindow::_ready(){
   _code_context_scene = ResourceLoader::get_singleton()->load(_code_context_scene_path);
   if(_code_context_scene == NULL){
     GameUtils::Logger::print_err_static("[CodeWindow] Scene for CodeContext cannot be find.");
-
     _quit_code = ERR_DOES_NOT_EXIST;
     goto on_error_label;
   }
@@ -348,7 +344,6 @@ void CodeWindow::_ready(){
     _test_node->queue_free();
     if(_node_class != CodeContext::get_class_static()){
       GameUtils::Logger::print_err_static("[CodeWindow] Scene for CodeContext does not contain CodeContext node.");
-
       _quit_code = ERR_UNCONFIGURED;
       goto on_error_label;
     }
@@ -378,11 +373,11 @@ void CodeWindow::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 
@@ -422,7 +417,7 @@ std::string CodeWindow::get_current_focus_code_path() const{
 
 
 void CodeWindow::open_code_context(){
-#if (_WIN64) || (_WIN32)
+#if !((_WIN64) || (_WIN32))
   const char* _window_title = "Open Lua File";
   std::string _file_path_str;
   const size_t _file_path_buffer_size = 256;
@@ -448,20 +443,20 @@ void CodeWindow::open_code_context(){
   open_code_context(_file_path_str);
 #else
   InstanceDatabase* _instance_db = get_node<InstanceDatabase>("/root/GlobalInstanceDatabase");
-  Ref<PackedScene> _file_dialog_pscn = _instance_db->get_instance<FileDialog>();
+  Ref<PackedScene> _file_dialog_pscn = _instance_db->get_instance<FileDialogExtend>();
   if(_file_dialog_pscn.is_null()){
     GameUtils::Logger::print_err_static("[CodeWindow] Cannot get instance data for FileDialog.");
     return;
   }
 
   Node* _file_dialog_node = _file_dialog_pscn->instantiate();
-  if(_file_dialog_node->is_class(FileDialog::get_class_static())){
-    GameUtils::Logger::print_err_static("[CodeWindow] FileDialog instance data does not have the actual object.");
+  if(!_file_dialog_node->is_class(FileDialogExtend::get_class_static())){
+    GameUtils::Logger::print_err_static("[CodeWindow] FileDialogExtend instance data does not have the actual object.");
     _file_dialog_node->queue_free();
     return;
   }
 
-  FileDialog* _file_dialog = (FileDialog*)_file_dialog_node;
+  FileDialogExtend* _file_dialog = (FileDialogExtend*)_file_dialog_node;
   get_tree()->get_root()->add_child(_file_dialog);
 
   PackedStringArray _filters_list;
@@ -469,7 +464,8 @@ void CodeWindow::open_code_context(){
     _filters_list.push_back("*;Any Files;");
 
   _file_dialog->set_filters(_filters_list);
-  _file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
+  _file_dialog->set_file_mode(FileDialogExtend::FILE_MODE_OPEN_FILES);
+  _file_dialog->set_access(FileDialog::ACCESS_FILESYSTEM);
   _file_dialog->popup();
 
   SignalOwnership _s1(Signal(_file_dialog, "file_selected"), Callable(this, "_on_file_selected").bind(_file_dialog));

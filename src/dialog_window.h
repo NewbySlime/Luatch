@@ -1,17 +1,3 @@
-// [v] TODO
-//  [v] This class is basically ConfirmationDialog but with extendable options.
-//  [v] Add property:
-//    [v] dialog_text
-//    [v] button_list
-//    [v] hide_on_button_clicked
-//  [v] Add function:
-//    [v] Set button list with data like callbacks and such
-//  [v] Add signal:
-//    [v] choice_pressed
-//  [v] Add pivot node as a basis of the resizing.
-//    [v] This also keeps updated by checking its hierarchy. Always use the first child.
-
-
 #ifndef DIALOG_WINDOW_HEADER
 #define DIALOG_WINDOW_HEADER
 

@@ -159,7 +159,6 @@ void CodeFlowControl::_ready(){
   _program_handle = get_node<LuaProgramHandle>("/root/GlobalLuaProgramHandle");
   if(!_program_handle){
     GameUtils::Logger::print_err_static("[CodeFlowControl] Cannot get LuaProgramHandle.");
-
     _quit_code = ERR_UNAVAILABLE;
     goto on_error_label;
   }
@@ -167,7 +166,6 @@ void CodeFlowControl::_ready(){
   _control_button_container = get_node<Node>(_control_button_container_path);
   if(!_control_button_container){
     GameUtils::Logger::print_err_static("[CodeFlowControl] Cannot get Control Button Container.");
-
     _quit_code = ERR_UNCONFIGURED;
     goto on_error_label;
   }
@@ -176,7 +174,6 @@ void CodeFlowControl::_ready(){
   variable = _control_button_container->get_node<Button>(path); \
   if(!variable){ \
     GameUtils::Logger::print_err_static("[CodeFlowControl] Cannot get '" path "' button in Button Container."); \
-     \
     _quit_code = ERR_UNCONFIGURED; \
     goto on_error_label; \
   }
@@ -208,11 +205,11 @@ void CodeFlowControl::_ready(){
   return;
 
 
-  on_error_label:{
-    ErrorTrigger::trigger_generic_error_message();
-
-    get_tree()->quit(_quit_code);
-  return;}
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  ErrorTrigger::trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

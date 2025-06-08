@@ -84,8 +84,10 @@ void OptionListMenu::_ready(){
   
 
   on_error:{}
-  trigger_generic_error_message();
-  get_tree()->quit(_quit_code);
+  SceneTree* _tree = get_tree();
+  trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 void OptionListMenu::_process(double delta){

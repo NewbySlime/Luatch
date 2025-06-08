@@ -265,7 +265,6 @@ void PopupVariableSetter::_ready(){
   if(!_control_node){
     GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get control node.");
     _quit_code = ERR_UNCONFIGURED;
-
     goto on_error_label;
   }
 
@@ -278,7 +277,6 @@ void PopupVariableSetter::_ready(){
   if(!_option_list){
     GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get OptionListMenu of the control node.");
     _quit_code = ERR_UNCONFIGURED;
-
     goto on_error_label;
   }
 
@@ -288,7 +286,6 @@ void PopupVariableSetter::_ready(){
   if(!_opc){ \
     GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get " log_name " for Setter Mode."); \
     _quit_code = ERR_UNCONFIGURED; \
-     \
     goto on_error_label; \
   } \
    \
@@ -296,7 +293,6 @@ void PopupVariableSetter::_ready(){
   if(!_tmp_node->is_class(target_gd_type::get_class_static())){ \
     GameUtils::Logger::print_err_static("[PopupVariableSetter] " log_name " is not a type of OptionButton."); \
     _quit_code = ERR_UNCONFIGURED; \
-     \
     goto on_error_label; \
   } \
    \
@@ -310,7 +306,6 @@ void PopupVariableSetter::_ready(){
   if(!_ginvoker){
     GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get GroupInvoker from OptionListMenu children.");
     _quit_code = ERR_UNCONFIGURED;
-
     goto on_error_label;
   }
 
@@ -318,7 +313,6 @@ void PopupVariableSetter::_ready(){
   if(!_reference_query_menu){
     GameUtils::Logger::print_err_static("[PopupVariableSetter] Cannot get ReferenceQueryMenu in child.");
     _quit_code = ERR_UNCONFIGURED;
-
     goto on_error_label;
   }
 
@@ -335,11 +329,11 @@ void PopupVariableSetter::_ready(){
 
   return;
 
-  on_error_label:{
-    trigger_generic_error_message();
-  
-    get_tree()->quit(_quit_code);
-  }
+  on_error_label:{}
+  SceneTree* _tree = get_tree();
+  trigger_generic_error_message([_tree, _quit_code](){
+    _tree->quit(_quit_code);
+  });
 }
 
 

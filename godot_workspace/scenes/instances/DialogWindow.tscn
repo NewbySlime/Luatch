@@ -1,14 +1,13 @@
 [gd_scene load_steps=2 format=3 uid="uid://4xafj7xa74ra"]
 
-[ext_resource type="PackedScene" uid="uid://db8322r7mtel8" path="res://scenes/dialog_window_base.tscn" id="1_avpfl"]
+[ext_resource type="PackedScene" uid="uid://db8322r7mtel8" path="res://scenes/DialogWindowBase.tscn" id="1_avpfl"]
 
 [node name="DialogWindow" type="DialogWindow"]
-initial_position = 1
+initial_position = 2
 size = Vector2i(139, 142)
 wrap_controls = true
 exclusive = true
 unresizable = true
 popup_window = true
-force_native = true
 
 [node name="BaseControl" parent="." instance=ExtResource("1_avpfl")]
