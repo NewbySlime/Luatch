@@ -1,4 +1,5 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X0175H9C)
+# NOTE
+Due to focusing on University and currently ongoing internship, the project's development will come to halt for some time.
 
 # Luatch (Previously named Lua-Debugger-GUI)
 A debugger made for Lua with Graphical UI made using Godot 4.3. Currently only works on Windows.
@@ -80,6 +81,8 @@ Note: the list is ordered by priority, top is highest priority, bottom is lowest
 
 ## Contributing
 Any contributions are appreciated, make sure to state the problems in the app or wanted features. You might also want to expect on some short delay in merging since I'm still in University.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X0175H9C)
 
 As simple as reporting an issue also helps the project to grow!
 
